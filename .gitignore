@@ -1,0 +1,12 @@
+main.b*
+main.aux
+main.f*
+main.p*
+main.log
+main.lot
+*.tex
+*.toc
+images
+data
+electron-quick-start/node_modules
+Makefile
