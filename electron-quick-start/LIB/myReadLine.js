@@ -75,6 +75,8 @@ exports.FileLineReader = function(filename, bufferSize) {
         mark = bufferSize - lineEnd
         return result;
     };
+
     return this;
 }
+
 
