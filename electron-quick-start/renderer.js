@@ -39,9 +39,12 @@ function searchFile() {
 
 
 document.getElementById("button").addEventListener('click', (ev) => {
-    // myRl.FileLineReader(loffile)
-    myRl.Test("../data/test");
-    // searchFile()
+    let CONTINUE
+    const textLine = myRl.FileLineReader(lofpath)
+    while(!CONTINUE){
+        console.log(textLine.nextLine())
+        CONTINUE = textLine.hasNextLine()
+    }
 })
 
 
