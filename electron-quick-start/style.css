@@ -1,0 +1,69 @@
+body{
+    overflow: auto;
+    font-family: "Gill Sans Extrabold", Helvetica, sans-serif;
+}
+
+#nthu-logo {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    width: 25%;
+    max-width: 300px;
+    min-width: 100px;
+    z-index: -10
+}
+
+#itemBox{
+    z-index: 2;
+    background-color: hsl(60, 100%, 85%);
+    position: relative;
+    padding-left: 1em;
+    padding-top: 1em;
+    margin-bottom:  5em;
+    margin-top:     5em;
+
+}
+
+#lofBox{
+    z-index: 10;
+    padding: 0;
+}
+
+#drop_zone{
+    border-style: dashed;
+    border-color: silver;
+    border-width: medium;
+    font-weight: bold;
+    z-index: 10;
+    padding: 20px;
+    margin: 0;
+    align-self: right;
+    color: silver;
+}
+
+#yes {
+    position: relative;
+    background: green;
+    margin-top: 0;
+    margin-bottom: 1em;
+    width: 150px;
+    height: 50px;
+}
+#no {
+    position: relative;
+    background: red;
+    margin-top: 0;
+    margin-bottom: 1em;
+    width: 150px;
+    height: 50px;
+}
+
+#imgBlock {
+    margin: 1em;
+}
+
+h2 {
+    z-index: 2;
+    color: hsl(232, 86%, 44%);
+    position: relative;
+}

@@ -4,6 +4,8 @@ const BrowserWindow = electron.BrowserWindow
 const path = require('path')
 const url = require('url')
 const fs = require('fs');
+const ipc = require('electron').ipcMain
+const dialog = require('electron').dialog
 
 let mainWindow
 let win = null
@@ -30,13 +32,21 @@ function createWindow () {
 
 
 
+ipc.on('open-file-dialog', function (event) {
+  dialog.showOpenDialog({
+    properties: ['openFile', 'openDirectory']
+  }, function (files) {
+    if (files) event.sender.send('selected-directory', files)
+  })
+})
+
 
 
 
 app.on('ready', () => {
     win = createWindow()
     win.webContents.on('did-finish-load', () => {
-        win.webContents.send('stream_message', "openfilestream")
+        win.webContents.send('main-render', 'ready')
     })
 })
 

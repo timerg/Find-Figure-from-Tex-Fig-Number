@@ -3,23 +3,36 @@
   <head>
     <meta charset="UTF-8">
     <title>Hello World!</title>
-  </head>
-  <body>
-    <h1>Hello World!</h1>
-    <!-- All of the Node.js APIs are available in this renderer process. -->
-    We are using Node.js <script>document.write(process.versions.node)</script>,
-    Chromium <script>document.write(process.versions.chrome)</script>,
-    and Electron <script>document.write(process.versions.electron)</script>.
-    <p>
-        <input id="DirectoryorFile" type="text", value="../data/chap2.tex">
-        <input id="fileName" type="text">
-        <button id="button">Find</button>
-    </p>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    </head>
+    <body>
+        <img id="nthu-logo"  src="nthu-logo.jpg">
+        <div id="itemBox">
+            <div id="lofBox"></div>
+            <div>
+                <h2>Set your data direcotry or .tex file</h2>
+                <input id="DirectoryorFile" type="text", value="../data/">
+                <div id="dirValid">
 
-    <p>
-        <button id="Test">Test Button</button>
-    </p>
-  </body>
+                </div>
+            </div>
+
+            <div>
+                <h2>Type in the figure number</h2>
+                <input id="fileName" type="text">
+                <button id="button">Find</button>
+            </div>
+            <div id = 'imgBlock'>
+                <img id="myImg"  width="300" />
+
+            </div>
+        </div>
+        <!-- <div id="inform">
+            We are using Node.js <script>document.write(process.versions.node)</script>,
+            Chromium <script>document.write(process.versions.chrome)</script>,
+            and Electron <script>document.write(process.versions.electron)</script>.
+        </div> -->
+    </body>
 
   <script>
     // You can also require other files to run in this process
