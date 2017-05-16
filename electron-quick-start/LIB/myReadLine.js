@@ -4,7 +4,6 @@
 // Methods: hasNextLine() -> boolean
 //          nextLine() -> String
 //
-// Add: mark,
 
 
 var fs = require("fs");
@@ -24,7 +23,7 @@ exports.FileLineReader = function(filename, bufferSize) {
         bufferSize = 8192;
     }
 
-    var currentPositionInFile = 0;
+    let currentPositionInFile = 0;
 
 
     var mark
@@ -35,7 +34,7 @@ exports.FileLineReader = function(filename, bufferSize) {
 // return -1
 // when EOF reached
 // fills buffer with next 8192 or less bytes
-    var fillBuffer = function(position, marker, space) {
+    let fillBuffer = function(position, marker, space) {
         resNum = fs.readSync(fd, buffer, marker, space, position);      // var is the number of bytesRead
         if (resNum == 0) {
             return -1
@@ -61,16 +60,16 @@ exports.FileLineReader = function(filename, bufferSize) {
 
             return true;
         }
-
-        console.error("Exceptional problem. the index return ".concat(buffer.indexOf(10)));
+        console.error("Exceptional problem. The index return ".concat(buffer.indexOf(10)));
         return false;
     };
 
-    //public:
+//public:
     this.nextLine = function() {
-        var lineEnd = buffer.indexOf(10);
-        var result = buffer.toString().substring(0, lineEnd);
+        let lineEnd = buffer.indexOf(10);
+        let result = buffer.toString().substring(0, lineEnd);
 
+    // remove result line; prompt back remaining; set mark: place for next time buffer write from file
         let remain = buffer.slice(lineEnd + 1, buffer[bufferSize])
         buffer.write(remain.toString(), 0)
         mark = bufferSize - lineEnd
