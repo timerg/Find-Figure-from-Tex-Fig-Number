@@ -2,12 +2,13 @@ const fs = require('fs');
 const readline = require('readline');
 const {ipcRenderer} = require('electron')
 const myRl = require('./LIB/myReadLine')
+let globalpath
 let dirPath = {
     content: null,
     type: null
 };
 
-let lofpath = "../main.lof"
+let lofpath
 let figure = {
     number: null,
     source: null,
@@ -25,16 +26,22 @@ let figure = {
 // ipc Process
 ipcRenderer.on('main-render', (event, message) => {
     if(message === 'ready'){
-        // Check lof
-        if(!fs.existsSync(lofpath)){
-            createLOFzone()
-        }
-        // send default Directory
-        let mEvent = document.createEvent('Event')
-        mEvent.initEvent('input')
-        document.getElementById("DirectoryorFile").dispatchEvent(mEvent)
+        ipcRenderer.on('path', (event, path) => {
+            globalpath = path;
+            document.getElementById('DirectoryorFile').value = globalpath.concat("data/")
+            lofpath = globalpath.concat("main.lof")
+            if(!fs.existsSync(lofpath)){
+                // console.log("No .lof file");
+                createLOFzone()
+            }
+            let mEvent = document.createEvent('Event')
+            mEvent.initEvent('input')
+            document.getElementById("DirectoryorFile").dispatchEvent(mEvent)
+        })
     }
 })
+
+
 
 // Drop and select lof
 function handleFileSelect(evt) {
@@ -43,8 +50,12 @@ function handleFileSelect(evt) {
 
     var files = evt.dataTransfer.files; // FileList object.
     lofpath = files[0].path
-    console.log(files);
-    console.log(lofpath);
+    if(fs.existsSync(lofpath))
+        modifyLOFzone("Your .lof is '".concat(lofpath, "'"))
+    else
+        modifyLOFzone("UNCAUGHT ERROR: This file doesn't exist ")
+    // console.log(files);
+    // console.log(lofpath);
 }
 
 function handleDragOver(evt) {
@@ -70,9 +81,18 @@ function createLOFzone(){
     }, false)
 
     ipcRenderer.on('selected-directory', function (event, path) {
-        lofpath = path
+        lofpath = path[0]
+        if(fs.existsSync(lofpath)){
+            modifyLOFzone("Your .lof is '".concat(lofpath, "'"))
+        } else{
+            modifyLOFzone("UNCAUGHT ERROR: This file doesn't exist ")
+        }
     })
 
+}
+
+function modifyLOFzone(string){
+    document.getElementById('drop_zone').textContent = string
 }
 
 document.addEventListener('dragover', (evt) => {
@@ -113,7 +133,7 @@ function printFail(text){
     const img = document.getElementById('myImg')
     const imgsrc = document.getElementById('imgsrc')
     imgsrc.style.marginLeft = 10;
-    console.log(imgsrc.style.marginLeft)
+    // console.log(imgsrc.style.marginLeft)
     imgsrc.textContent = text
 }
 function printResult(){
@@ -122,9 +142,9 @@ function printResult(){
     imgsrc.style.marginLeft = 332;
     imgsrc.textContent = "This figure is at '".concat(figure.source.replace('\{', '').replace('\}', '')).replace(/\//g, ' / ').concat("'")
     if(!figure.source.includes(".eps")){
-        img.src = "../".concat(figure.source.replace('{', '').replace('}', ''))
+        img.src = globalpath.concat(figure.source.replace('{', '').replace('}', ''))
     } else{
-        img.src = "EPSerror.jpeg"
+        img.src = "Img/EPSerror.jpeg"
     }
 }
 function resultClear(){
@@ -160,6 +180,7 @@ function parseFigTex(filePath) {
     const imgBlock = document.getElementById('imgBlock');
     let source_temp
     var reader = new myRl.FileLineReader(filePath)
+    var canRun
     checkFunc(reader)
 }
 
@@ -208,6 +229,8 @@ function checkFunc_loop(reader, toCheck){
         }
 
     }
+    printFail("UNCAUGHT ERROR: Can't find the figure")
+    return false
 }
 
 
@@ -279,7 +302,6 @@ document.getElementById("button").addEventListener("click", function(event) {
     removeYesNo()
     figure.clear()
     resultClear()
-    console.log(dirPath);
     figure.number = document.getElementById('fileName').value
     // Check input fig number format
     if(!figure.number){

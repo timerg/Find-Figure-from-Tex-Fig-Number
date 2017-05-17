@@ -10,3 +10,5 @@ images
 data
 electron-quick-start/node_modules
 Makefile
+*-win32-x64
+*-darwin-x64

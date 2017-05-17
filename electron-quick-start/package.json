@@ -1,10 +1,12 @@
 {
-  "name": "electron-quick-start",
+  "name": "electronApp",
   "version": "1.0.0",
   "description": "A minimal Electron application",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "buildwin": "electron-packager . TexFigureSearch --platform=win32 --overwrite",
+    "buildmac": "electron-packager . TexFigureSearch --overwrite"
   },
   "repository": "https://github.com/electron/electron-quick-start",
   "keywords": [
@@ -20,5 +22,6 @@
     "electron": "~1.6.2"
   },
   "dependencies": {
+    "electron-packager": "^8.7.0"
   }
 }

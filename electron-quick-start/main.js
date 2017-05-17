@@ -21,7 +21,7 @@ function createWindow () {
       })
 
     )
-    // mainWindow.webContents.openDevTools()
+    mainWindow.webContents.openDevTools()
 
 
     mainWindow.on('closed', function () {
@@ -36,10 +36,11 @@ ipc.on('open-file-dialog', function (event) {
   dialog.showOpenDialog({
     properties: ['openFile', 'openDirectory']
   }, function (files) {
-    if (files) event.sender.send('selected-directory', files)
+    if (files) {
+        event.sender.send('selected-directory', files)
+    }
   })
 })
-
 
 
 
@@ -47,6 +48,13 @@ app.on('ready', () => {
     win = createWindow()
     win.webContents.on('did-finish-load', () => {
         win.webContents.send('main-render', 'ready')
+        if (process.platform !== 'darwin'){
+            let globalPath = app.getAppPath().replace(/\\[a-zA-Z0-9_-]+\\resources\\app/gi, '\\')
+            win.webContents.send('path', globalPath)
+        } else {
+            let globalPath = app.getAppPath().replace(/\/\w+\.app\/Contents\/Resources\/app/gi, '\/')
+            win.webContents.send('path', globalPath)
+        }
     })
 })
 
