@@ -5,10 +5,8 @@ const {ipcRenderer} = require('electron')
 const myRl = require('./LIB/myReadLine')
 const myEF = require('./LIB/myEveryFiles.js')
 let globalpath
-let dirPath = {
-    content: null,
-    type: null
-};
+let dirPath
+let data
 // html element
 const img = document.getElementById("myImg")
 const imgBlock = document.getElementById('imgBlock');
@@ -122,10 +120,8 @@ document.addEventListener('drop', (evt) => {
 
 //// Search input fignumber in lof
 function searchFile() {
-    let success = null
     let CONTINUE = true
     if(fs.existsSync(lofpath)){
-        success = false
         let reader = new myRl.FileLineReader(lofpath)
         while(CONTINUE){
             let input = reader.nextLine()
@@ -134,15 +130,15 @@ function searchFile() {
                 figure.exist = true
                 let caption = input.match(/ignorespaces.*relax/g)[0]
                 figure.caption = caption.replace('ignorespaces ', '').replace('\\relax', '').replace(/\s/g, '').replace(/Fig.*\\hbox\{\}/g, '')
-                success = true
                 CONTINUE = false
             }
         }
+        if(!figure.exist){
+            printFail("No such figure exist or the .lof file is wrong!")
+        }
+    } else {
+        printFail(".lof file is not loaded!")
     }
-    return success
-    // succes  = null if no loffilfe
-            // = false if can't find the figure number usr gave
-            // = true if the figure number found
 }
 
 
@@ -189,51 +185,39 @@ function removeYesNo(){
 
 
 ////// use caption to search
-
-// Return true if
-    // meet a potential target Fig with no caption (need check)
-    // meet the EOF
-// Return false if
-    // meet the target (no need for check)
-function checkFunc_loop(reader){       // Check a file, may stop when met the target or end when met EOF
-    let CONTINUE = true
-    let source_temp
-    while(CONTINUE){
-        let input = reader.nextLine()
-        CONTINUE = reader.hasNextLine()
-        if(input.match("\\includegraphics")){
-            source_temp = input.match(/\{.*\}/)
-        }
-        if(input.match("\caption")){
-            let caption_temp = input.replace('\\caption\{', '').replace(/\}$/, '').replace(/\s/g, '').replace(/Fig\.\\ref\{.*\}/g, '')
-            // Some figure don't have caption
-            if(caption_temp){
-                if(figure.caption !== null && figure.caption.includes(caption_temp)){
-                    figure.source = source_temp[0]
-                    printResult()
-                    CONTINUE = false
-                }
-            } else {
-                if(!figure.caption){
-                    img.src = "../".concat(source_temp[0].replace('{', '').replace('}', ''));
-                    figure.source = source_temp[0]
-                    printResult()
-                    CONTINUE = false
-                }
-            }
-
-        }
-
-    }
-}
+// function checkFunc_loop(reader){
+//     let CONTINUE = true
+//     let source_temp
+//     while(CONTINUE){
+//         let input = reader.nextLine()
+//         CONTINUE = reader.hasNextLine()
+//         if(input.match("\\includegraphics")){
+//             source_temp = input.match(/\{.*\}/)
+//         }
+//         if(input.match("\caption")){
+//             let caption_temp = input.replace('\\caption\{', '').replace(/\}$/, '').replace(/\s/g, '').replace(/Fig\.\\ref\{.*\}/g, '')
+//             // Some figure don't have caption
+//             if(caption_temp){
+//                 if(figure.caption !== null && figure.caption.includes(caption_temp)){
+//                     figure.source = source_temp[0]
+//                     printResult()
+//                     CONTINUE = false
+//                 }
+//             } else {
+//                 if(!figure.caption){
+//                     img.src = "../".concat(source_temp[0].replace('{', '').replace('}', ''));
+//                     figure.source = source_temp[0]
+//                     printResult()
+//                     CONTINUE = false
+//                 }
+//             }
+//
+//         }
+//
+//     }
+// }
 
 
-// If in the 'if' block
-    // Return false if 'yes' is click
-    // Return true if 'no' is click
-// If not in the 'if' block
-    // Return false if checkFunc_loop return false, that is
-    // Return true if
 function checkFunc(reader) {
     createYesNo()
     document.getElementById('yes').addEventListener('click', () => {
@@ -245,61 +229,44 @@ function checkFunc(reader) {
     })
 }
 
-
-// Retrun true if meet EOF and need to search more
-function parseFigTex(filePath) {
-    var reader = new myRl.FileLineReader(filePath)
-    return checkFunc(reader)
-}
-
-
-// state:
-//      0: togo is false, to check is false
-//      1: to go is true, to check is false
-//      2: to go is false, to check is true
-//      3: to go is true, to check is true
+// function parseFigTex(filePath) {
+//     var reader = new myRl.FileLineReader(filePath)
+//
+//     return checkFunc(reader)
+// }
 
 
-
-function dirRender(path) {
-    if(path.type){
-        if(path.type === 'file'){
-            parseFigTex(path.content)
-        } else if (path.type === 'dir') {
-            fs.readdir(path.content, (err, files) => {
-                console.log(files);
-                files.every(function(file) {
-                    parseFigTex(path.content.concat(file))
-                })
-            })
-        }
-    }
+function dataRender(files) {
+    myEF.myEveryFiles(files, (file) => {
+        return searchCaption(file)
+    })
 }
 
 ////// Check the directory(or file) is valid
 function checkDir(path){
     // console.log("do check");
-    fs.readdir(path.content, (err, files) => {
+    fs.readdir(path, (err, files) => {
         if(err !== null){
-            if(!fs.existsSync(path.content)){
-                path.type = 'null'
+            if(!fs.existsSync(path)){
+                path = 'null'
                 dirValid.textContent = "Invalid"
             } else {
-                path.type = 'file'
+                // path is a file
                 if(!path.content.includes(".tex")){
                     dirValid.textContent = "Valid (Not a .tex file)"
                 } else {
                     dirValid.textContent = "Valid (file)"
                 }
+                data = [path]
             }
         }
         else{
-            if(path.content.charAt(path.content.length - 1) !== "/"){
+            if(path.charAt(path.content.length - 1) !== "/"){
                 dirValid.textContent = "Invalid (maybe need a '/')"
-                path.type = null
+                path = null
             } else{
                 dirValid.textContent = "Valid (directory)"
-                path.type = 'dir'
+                data = files
             }
         }
     })
@@ -308,7 +275,7 @@ function checkDir(path){
 ////// Process render
 getData.addEventListener('input', function() {
     // console.log("input");
-    dirPath.content = getData.value
+    dirPath = getData.value
     checkDir(dirPath)
 }, false);
 
@@ -326,14 +293,8 @@ button_find.addEventListener("click", function(event) {
             printFail("Wrong input format");
         } else{
             figure.number = num[0]
-            let success = searchFile()
-            if(success === true){
-                dirRender(dirPath)
-            } else if(success === false){
-                printFail("No such figure exist or the .lof file is wrong!")
-            } else {
-                printFail(".lof file is not loaded!")
-            }
+            searchFile()
+            dataRender(data)
         }
     }
 }, false)
