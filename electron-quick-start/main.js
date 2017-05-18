@@ -21,7 +21,7 @@ function createWindow () {
       })
 
     )
-    // mainWindow.webContents.openDevTools()
+    mainWindow.webContents.openDevTools()
 
 
     mainWindow.on('closed', function () {
@@ -52,7 +52,11 @@ app.on('ready', () => {
             let globalPath = app.getAppPath().replace(/\\[a-zA-Z0-9_-]+\\resources\\app/gi, '\\')
             win.webContents.send('path', globalPath)
         } else {
-            let globalPath = app.getAppPath().replace(/\/\w+\.app\/Contents\/Resources\/app/gi, '\/')
+            let globalPath
+            if(app.getAppPath().includes("electron-quick-start"))
+                globalPath = app.getAppPath().concat('\/..\/')                  // from developing stage
+            else
+                globalPath = app.getAppPath().replace(/\/\w+\.app\/Contents\/Resources\/app/gi, '\/')
             win.webContents.send('path', globalPath)
         }
     })

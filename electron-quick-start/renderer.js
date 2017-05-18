@@ -1,12 +1,25 @@
 const fs = require('fs');
 const readline = require('readline');
 const {ipcRenderer} = require('electron')
+// self define
 const myRl = require('./LIB/myReadLine')
+const myEF = require('./LIB/myEveryFiles.js')
 let globalpath
 let dirPath = {
     content: null,
     type: null
 };
+// html element
+const img = document.getElementById("myImg")
+const imgBlock = document.getElementById('imgBlock');
+const imgsrc = document.getElementById("imgsrc")
+const yesnoBlock = document.getElementById('yesNoBlock');
+const dirvalid = document.getElementById("dirValid")
+const getData = document.getElementById('getData')
+const datalist = document.getElementById("data_fdlist")
+const lofBox = document.getElementById('lofBox')
+const button_find = document.getElementById("button_find")
+const getFignumber = document.getElementById("getFignumber")
 
 let lofpath
 let figure = {
@@ -28,7 +41,7 @@ ipcRenderer.on('main-render', (event, message) => {
     if(message === 'ready'){
         ipcRenderer.on('path', (event, path) => {
             globalpath = path;
-            document.getElementById('DirectoryorFile').value = globalpath.concat("data/")
+            getData.value = globalpath.concat("data/")
             lofpath = globalpath.concat("main.lof")
             if(!fs.existsSync(lofpath)){
                 // console.log("No .lof file");
@@ -36,7 +49,7 @@ ipcRenderer.on('main-render', (event, message) => {
             }
             let mEvent = document.createEvent('Event')
             mEvent.initEvent('input')
-            document.getElementById("DirectoryorFile").dispatchEvent(mEvent)
+            getData.dispatchEvent(mEvent)
         })
     }
 })
@@ -65,16 +78,16 @@ function handleDragOver(evt) {
 }
 
 function createLOFzone(){
-    let newDiv = document.createElement("div")
-    newDiv.id = "drop_zone"
-    newDiv.appendChild(document.createTextNode(`Need '.lof' file.
+    let drop_zone = document.createElement("div")
+    drop_zone.id = "drop_zone"
+    drop_zone.appendChild(document.createTextNode(`Need '.lof' file.
                                         Drag the file here or Click to Open`))
-    document.getElementById('lofBox').appendChild(newDiv)
+    lofBox.appendChild(drop_zone)
     // Drop LOF
-    newDiv.addEventListener('dragover', handleDragOver, false);
-    newDiv.addEventListener('drop', handleFileSelect, false);
+    drop_zone.addEventListener('dragover', handleDragOver, false);
+    drop_zone.addEventListener('drop', handleFileSelect, false);
     // Select LOF
-    document.getElementById('drop_zone').addEventListener('click', (evt) => {
+    drop_zone.addEventListener('click', (evt) => {
         evt.preventDefault();
         evt.stopPropagation();
         ipcRenderer.send('open-file-dialog')
@@ -109,37 +122,39 @@ document.addEventListener('drop', (evt) => {
 
 //// Search input fignumber in lof
 function searchFile() {
-    var success = false
+    let success = null
     let CONTINUE = true
-    let reader = new myRl.FileLineReader(lofpath)
-    while(CONTINUE){
-        let input = reader.nextLine()
-        CONTINUE = reader.hasNextLine()
-        if(input.match("{".concat(figure.number, "}"))){
-            figure.exist = true
-            let caption = input.match(/ignorespaces.*relax/g)[0]
-            figure.caption = caption.replace('ignorespaces ', '').replace('\\relax', '').replace(/\s/g, '').replace(/Fig.*\\hbox\{\}/g, '')
-            success = true
-            CONTINUE = false
+    if(fs.existsSync(lofpath)){
+        success = false
+        let reader = new myRl.FileLineReader(lofpath)
+        while(CONTINUE){
+            let input = reader.nextLine()
+            CONTINUE = reader.hasNextLine()
+            if(input.match("{".concat(figure.number, "}"))){
+                figure.exist = true
+                let caption = input.match(/ignorespaces.*relax/g)[0]
+                figure.caption = caption.replace('ignorespaces ', '').replace('\\relax', '').replace(/\s/g, '').replace(/Fig.*\\hbox\{\}/g, '')
+                success = true
+                CONTINUE = false
+            }
         }
     }
     return success
+    // succes  = null if no loffilfe
+            // = false if can't find the figure number usr gave
+            // = true if the figure number found
 }
 
 
 //// Match figure cation and send output
 ////// Print the search result in window
 function printFail(text){
-    const img = document.getElementById('myImg')
-    const imgsrc = document.getElementById('imgsrc')
     img.src = ''
     imgsrc.style.marginLeft = 10;
     // console.log(imgsrc.style.marginLeft)
     imgsrc.textContent = text
 }
 function printResult(){
-    const imgsrc = document.getElementById('imgsrc')
-    const img = document.getElementById('myImg')
     imgsrc.style.marginLeft = 332;
     imgsrc.textContent = "This figure is at '".concat(figure.source.replace('\{', '').replace('\}', '')).replace(/\//g, ' / ').concat("'")
     if(!figure.source.includes(".eps")){
@@ -149,59 +164,40 @@ function printResult(){
     }
 }
 function resultClear(){
-    document.getElementById('imgsrc').textContent=''
-    document.getElementById('myImg').src=''
+    imgsrc.textContent=''
+    img.src=''
 }
 
 ////// create decsion block for figure with no caption
 function createYesNo(){
-    var yesno = document.getElementById('yesNo')
     var yesDiv = document.createElement('div')
     yesDiv.id =  'yes'
     yesDiv.textContent = "Right figure?"
     var noDiv = document.createElement('div')
     noDiv.id =  'no'
     noDiv.textContent = ("Wrong figure?")
-    yesno.appendChild(yesDiv)
-    yesno.appendChild(noDiv)
+    yesnoBlock.appendChild(yesDiv)
+    yesnoBlock.appendChild(noDiv)
 }
 
 function removeYesNo(){
-    const imgBlock = document.getElementById('yesNo');
-    if(imgBlock.childNodes[0]){
-        imgBlock.removeChild(document.getElementById('yes'))
-        imgBlock.removeChild(document.getElementById('no'))
+    if(yesnoBlock.childNodes[0]){
+        yesnoBlock.removeChild(document.getElementById('yes'))
+        yesnoBlock.removeChild(document.getElementById('no'))
     }
 }
 
 
 ////// use caption to search
-function parseFigTex(filePath) {
 
-    const imgBlock = document.getElementById('imgBlock');
-    let source_temp
-    var reader = new myRl.FileLineReader(filePath)
-    var canRun
-    checkFunc(reader)
-}
-
-function checkFunc(reader) {
-    let togo = checkFunc_loop(reader)
-    if(togo){     // If file don't has caption and the search result need to be checked
-        createYesNo()
-        document.getElementById('yes').addEventListener('click', () => {
-            removeYesNo()
-        })
-        document.getElementById('no').addEventListener('click', () => {
-            figure.source = null
-            removeYesNo()
-            checkFunc(reader)
-        })
-    }
-}
-
-function checkFunc_loop(reader, toCheck){
+// Return true if
+    // meet a potential target Fig with no caption (need check)
+    // meet the EOF
+// Return false if
+    // meet the target (no need for check)
+function checkFunc_loop(reader){       // Check a file, may stop when met the target or end when met EOF
     let CONTINUE = true
+    let source_temp
     while(CONTINUE){
         let input = reader.nextLine()
         CONTINUE = reader.hasNextLine()
@@ -212,28 +208,77 @@ function checkFunc_loop(reader, toCheck){
             let caption_temp = input.replace('\\caption\{', '').replace(/\}$/, '').replace(/\s/g, '').replace(/Fig\.\\ref\{.*\}/g, '')
             // Some figure don't have caption
             if(caption_temp){
-                if(figure.caption !== null & figure.caption.includes(caption_temp)){
+                if(figure.caption !== null && figure.caption.includes(caption_temp)){
                     figure.source = source_temp[0]
                     printResult()
                     CONTINUE = false
-                    return false
+                    state = 0        // No need to search more & No need for check
+                    return state
                 }
             } else {
                 if(!figure.caption){
-                    myImg.src = "../".concat(source_temp[0].replace('{', '').replace('}', ''));
+                    img.src = "../".concat(source_temp[0].replace('{', '').replace('}', ''));
                     figure.source = source_temp[0]
                     printResult()
                     CONTINUE = false
-                    return true
+                    state = 3      // Need to search more & Need to be check
+                    return state
                 }
             }
 
         }
 
     }
-    printFail("UNCAUGHT ERROR: Can't find the figure")
-    return false
+    // printFail("UNCAUGHT ERROR: Can't find the figure")
+    return 1
 }
+
+
+// If in the 'if' block
+    // Return false if 'yes' is click
+    // Return true if 'no' is click
+// If not in the 'if' block
+    // Return false if checkFunc_loop return false, that is
+    // Return true if
+function checkFunc(reader) {
+    let stateNext = checkFunc_loop(reader)
+    if(stateNext === 3){     // If file don't has caption and the search result need to be checked
+        createYesNo()
+        document.getElementById('yes').addEventListener('click', () => {
+            removeYesNo()
+            stateNext = 0
+            return stateNext
+        })
+        document.getElementById('no').addEventListener('click', () => {
+            figure.source = null
+            removeYesNo()
+            stateNext = checkFunc(reader)
+            if(stateNext === 1){
+                return true
+            } else{
+
+            }
+            return stateNext
+        })
+    } else {
+        return false
+    }
+}
+
+
+// Retrun true if meet EOF and need to search more
+function parseFigTex(filePath) {
+    var reader = new myRl.FileLineReader(filePath)
+    return checkFunc(reader)
+
+}
+
+
+// state:
+//      0: togo is false, to check is false
+//      1: to go is true, to check is false
+//      2: to go is false, to check is true
+//      3: to go is true, to check is true
 
 
 
@@ -242,20 +287,20 @@ function dirRender(path) {
         if(path.type === 'file'){
             parseFigTex(path.content)
         } else if (path.type === 'dir') {
+            //
             fs.readdir(path.content, (err, files) => {
-                files.every(function(file, index){
-                    // console.log(figure.caption)
-                    parseFigTex(path.content.concat(file))
-                    // console.log(figure.source);
-                    if(!figure.source){
-                        // console.log(true);
+                // console.log(files);
+                myEF.myEveryFiles(files, function(file) {
+                    let state = parseFigTex(path.content.concat(file))
+                    if(state === 3 | state === 1)
                         return true
-                    } else{
-                        // console.log(false);
+                    else if(state === 0)
                         return false
-                    }
+                    else
+                        console.error("ERROR: state error. state is ".concat(state));
                 })
             })
+            //
         }
     }else {
         console.error("uncaught dir read error");
@@ -266,27 +311,26 @@ function dirRender(path) {
 ////// Check the directory(or file) is valid
 function checkDir(path){
     // console.log("do check");
-    const dirvalid = document.getElementById("dirValid")
     fs.readdir(path.content, (err, files) => {
         if(err !== null){
             if(!fs.existsSync(path.content)){
                 path.type = 'null'
-                dirvalid.textContent = "Invalid"
+                dirValid.textContent = "Invalid"
             } else {
                 path.type = 'file'
                 if(!path.content.includes(".tex")){
-                    dirvalid.textContent = "Valid (Not a .tex file)"
+                    dirValid.textContent = "Valid (Not a .tex file)"
                 } else {
-                    dirvalid.textContent = "Valid (file)"
+                    dirValid.textContent = "Valid (file)"
                 }
             }
         }
         else{
             if(path.content.charAt(path.content.length - 1) !== "/"){
-                dirvalid.textContent = "Invalid (maybe need a '/')"
+                dirValid.textContent = "Invalid (maybe need a '/')"
                 path.type = null
             } else{
-                dirvalid.textContent = "Valid (directory)"
+                dirValid.textContent = "Valid (directory)"
                 path.type = 'dir'
             }
         }
@@ -294,17 +338,17 @@ function checkDir(path){
 }
 
 ////// Process render
-document.getElementById("DirectoryorFile").addEventListener('input', function() {
+getData.addEventListener('input', function() {
     // console.log("input");
-    dirPath.content = document.getElementById("DirectoryorFile").value
+    dirPath.content = getData.value
     checkDir(dirPath)
 }, false);
 
-document.getElementById("button").addEventListener("click", function(event) {
+button_find.addEventListener("click", function(event) {
     removeYesNo()
     figure.clear()
     resultClear()
-    figure.number = document.getElementById('fignumber').value
+    figure.number = getFignumber.value
     // Check input fig number format
     if(!figure.number){
         printFail("Empty figure name!");
@@ -314,13 +358,15 @@ document.getElementById("button").addEventListener("click", function(event) {
             printFail("Wrong input format");
         } else{
             figure.number = num[0]
-            if(searchFile()){
+            let success = searchFile()
+            if(success === true){
                 dirRender(dirPath)
-            }else{
-                printFail("No such figure exist!")
+            } else if(success === false){
+                printFail("No such figure exist or the .lof file is wrong!")
+            } else {
+                printFail(".lof file is not loaded!")
             }
         }
     }
 }, false)
-
 // console.log(document.getElementById('imgsrc'));

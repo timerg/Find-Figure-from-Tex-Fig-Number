@@ -1,24 +1,86 @@
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {1.1}{\ignorespaces Sorce Follower\relax }}{2}
-\contentsline {figure}{\numberline {1.2}{\ignorespaces ISFET readout circuit in \cite {SF1}\relax }}{3}
-\contentsline {figure}{\numberline {1.3}{\ignorespaces Sorce Follower with parasitic capacitance\relax }}{5}
-\contentsline {figure}{\numberline {1.4}{\ignorespaces (a) Schematic of \cite {Juv1}.\relax }}{5}
-\contentsline {figure}{\numberline {1.5}{\ignorespaces Schematic of \cite {Juv2}.\relax }}{6}
-\contentsline {figure}{\numberline {1.6}{\ignorespaces Block diagram of the lock-in amplifier in \cite {Jlockin}\relax }}{8}
-\contentsline {figure}{\numberline {1.7}{\ignorespaces The gate coupling effect in MOSFET \cite {bookOfUltra}.\relax }}{12}
-\contentsline {figure}{\numberline {1.8}{\ignorespaces The gate coupling effect in nanowire.\relax }}{13}
-\contentsline {figure}{\numberline {1.9}{\ignorespaces Concentration-dependent electric response($I_D-V_G$) of biotin-modified poly-Si NWFET following biotin–streptavidin interaction.\cite {DN17}\relax }}{14}
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {2.1}{\ignorespaces Nanowire Structure. \textbf {(a)} A nanowire device with two poly-silicon channels. \textbf {(b)} The sectional view of the cutting plane in (a). \relax }}{16}
-\contentsline {figure}{\numberline {2.2}{\ignorespaces The fabrication process of the nanowire. This figure is plotted by Prof.Yang's team \cite {DN17}.\relax }}{16}
-\contentsline {figure}{\numberline {2.3}{\ignorespaces \relax }}{17}
-\contentsline {figure}{\numberline {2.4}{\ignorespaces Concentration-dependent $I_D$-$V_G$ curves of two equivalent nanowire devices. In \textbf {(a)}, the measurement result of 1fM and 100fM biomolecule solution is distinguishable. There is no overlap between two curves. This is not true in \textbf {(b)}.\relax }}{18}
-\contentsline {figure}{\numberline {2.5}{\ignorespaces Concentration-dependent $I_D$-$V_G$ curves with concentration of Na\_PB(Buffer solution only), 100aM, 10pM, 1pM. Since the biomolecule is negative-charged, the lower the concentration is, the higher the curve is. To be noticed, the 10fM curve is closer to the curve of 1pM than 100aM. \relax }}{19}
-\contentsline {figure}{\numberline {2.6}{\ignorespaces The normalized variation of Fig.2.5\hbox {}. The normalized variation is obtained by dividing SD by Mean.\relax }}{20}
-\contentsline {figure}{\numberline {2.7}{\ignorespaces \textbf {(a), (c), (e)} $I_D$-$V_G$ curves for three nanowire devices placed under solution with DNA concentration of 1f and 100f. \textbf {(b), (d), (f)} are the noise tolerance of the three devices respectively.\relax }}{22}
-\contentsline {figure}{\numberline {2.8}{\ignorespaces The $g_m$-$I_D$ curve obtained by the $I_D$-$V_G$ curve in Fig.2.5\hbox {}. The curves start splitting after $I_D$ > 1$\mu $A where the device may enter into strong inversion region.\relax }}{23}
-\contentsline {figure}{\numberline {2.9}{\ignorespaces Comparison between the DC sweep of voltage on the floating gate and . \textbf {(a)} $I_D$. \textbf {(b)} Transconductance ($g_m$). The $I_D$ and $gm$ of the floating gate are larger than the back-gate.\relax }}{25}
-\contentsline {figure}{\numberline {2.10}{\ignorespaces Eelectrical response of a nanowire device. \textbf {(a)} Sweep $V_G$ and measure the $I_D$ changes. By finding $g_m (\frac {\partial I_D}{\partial V_G}$), \textbf {(b)} the $g_m$-$I_D$ curve is plotted.\relax }}{26}
-\contentsline {figure}{\numberline {2.11}{\ignorespaces $gm$-$I_D curves$ with $V_{DS}$ variance\relax }}{27}
-\contentsline {figure}{\numberline {2.12}{\ignorespaces $I_D$-$r_{ds}$ plot\relax }}{28}
-\contentsline {figure}{\numberline {2.13}{\ignorespaces \relax }}{28}
+\contentsline {figure}{\numberline {2.1}{\ignorespaces Sorce Follower\relax }}{5}
+\contentsline {figure}{\numberline {2.2}{\ignorespaces ISFET readout circuit in \cite {SF1}\relax }}{6}
+\contentsline {figure}{\numberline {2.3}{\ignorespaces Sorce Follower with parasitic capacitance\relax }}{8}
+\contentsline {figure}{\numberline {2.4}{\ignorespaces (a) Schematic of \cite {Juv1}.\relax }}{8}
+\contentsline {figure}{\numberline {2.5}{\ignorespaces Schematic of \cite {Juv2}.\relax }}{9}
+\contentsline {figure}{\numberline {2.6}{\ignorespaces Block diagram of the lock-in amplifier in \cite {Jlockin}\relax }}{11}
+\contentsline {figure}{\numberline {2.7}{\ignorespaces The gate coupling effect in MOSFET \cite {bookOfUltra}.\relax }}{15}
+\contentsline {figure}{\numberline {2.8}{\ignorespaces The gate coupling effect in nanowire.\relax }}{16}
+\contentsline {figure}{\numberline {2.9}{\ignorespaces Concentration-dependent electric response($I_D-V_G$) of biotin-modified poly-Si NWFET following biotin–streptavidin interaction.\cite {DN17}\relax }}{17}
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {3.1}{\ignorespaces Nanowire Structure. \textbf {(a)} A nanowire device with two poly-silicon channels. \textbf {(b)} The sectional view of the cutting plane in (a). \relax }}{19}
+\contentsline {figure}{\numberline {3.2}{\ignorespaces The fabrication process of the nanowire. This figure is plotted by Prof.Yang's team \cite {DN17}.\relax }}{19}
+\contentsline {figure}{\numberline {3.3}{\ignorespaces \relax }}{20}
+\contentsline {figure}{\numberline {3.4}{\ignorespaces Concentration-dependent $I_D$-$V_G$ curves of two equivalent nanowire devices. In \textbf {(a)}, the measurement result of 1fM and 100fM biomolecule solution is distinguishable. There is no overlap between two curves. This is not true in \textbf {(b)}.\relax }}{21}
+\contentsline {figure}{\numberline {3.5}{\ignorespaces Concentration-dependent $I_D$-$V_G$ curves with concentration of Na\_PB(Buffer solution only), 100aM, 10pM, 1pM. Since the biomolecule is negative-charged, the lower the concentration is, the higher the curve is. To be noticed, the 10fM curve is closer to the curve of 1pM than 100aM. \relax }}{22}
+\contentsline {figure}{\numberline {3.6}{\ignorespaces The normalized variation of Fig.3.5\hbox {}. The normalized variation is obtained by dividing SD by Mean.\relax }}{23}
+\contentsline {figure}{\numberline {3.7}{\ignorespaces \textbf {(a), (c), (e)} $I_D$-$V_G$ curves for three nanowire devices placed under solution with DNA concentration of 1f and 100f. \textbf {(b), (d), (f)} are the noise tolerance of the three devices respectively.\relax }}{25}
+\contentsline {figure}{\numberline {3.8}{\ignorespaces The $g_m$-$I_D$ curve obtained by the $I_D$-$V_G$ curve in Fig.3.5\hbox {}. The curves start splitting after $I_D$ > 1$\mu $A where the device may enter into strong inversion region.\relax }}{26}
+\contentsline {figure}{\numberline {3.9}{\ignorespaces Comparison between the DC sweep of voltage on the floating gate and . \textbf {(a)} $I_D$. \textbf {(b)} Transconductance ($g_m$). The $I_D$ and $gm$ of the floating gate are larger than the back-gate.\relax }}{28}
+\contentsline {figure}{\numberline {3.10}{\ignorespaces Eelectrical response of a nanowire device. \textbf {(a)} Sweep $V_G$ and measure the $I_D$ changes. By finding $g_m (\frac {\partial I_D}{\partial V_G}$), \textbf {(b)} the $g_m$-$I_D$ curve is plotted.\relax }}{29}
+\contentsline {figure}{\numberline {3.11}{\ignorespaces $gm$-$I_D curves$ with $V_{DS}$ variance\relax }}{30}
+\contentsline {figure}{\numberline {3.12}{\ignorespaces $I_D$-$r_{ds}$ plot\relax }}{31}
+\contentsline {figure}{\numberline {3.13}{\ignorespaces Device variability problem cause nanowire devices with same environment can exhibit different electrical responses.\relax }}{31}
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {4.1}{\ignorespaces The schematic of read-out circuit from \cite {SF1}. The ISFET is a p-type device. It is controlled by the current source $I_b$ whose sub-circuit is shown at right.\relax }}{35}
+\contentsline {figure}{\numberline {4.2}{\ignorespaces Our circuit schematic transformed from Fig.4.1\hbox {}. The device under test (DUT) is a n-type device. It is controlled by the current source $I_b$ whose sub-circuit is shown at right.\relax }}{35}
+\contentsline {figure}{\numberline {4.3}{\ignorespaces LM334: The discrete element we use for current source Is. It has three terminals: $R$, $V_+$, $V_-$. The output current ($I_s$) flows from $V_+$ to $V_-$. The resistor $R_{SET}$ connected to $V_-$ and $R$ is for adjusting the output current.\relax }}{36}
+\contentsline {figure}{\numberline {4.4}{\ignorespaces The measuremet result (``SF\_measurement'') compares with the direct $I_D$-$V_G$ sweep (``Id-Vg sweep'').\relax }}{38}
+\contentsline {figure}{\numberline {4.5}{\ignorespaces Input impedance of transistor (``1/gm'') and output impedance of Ib circuit (``N * Rs''). The former is found by the derivative of $I_D$ of $V_{Gs}$. The latter is obtained by Eq.4.1\hbox {}.\relax }}{39}
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {5.1}{\ignorespaces The fronted circuit operated in DC-sweep mode.\relax }}{41}
+\contentsline {figure}{\numberline {5.2}{\ignorespaces Two usage (\textbf {(a)}, \textbf {(b)}) of the fronted circuit operated in Transient Measurement mode.\relax }}{42}
+\contentsline {figure}{\numberline {5.3}{\ignorespaces \textbf {(a)} The transimpedance block (TIA) of the read-out circuit from \cite {Jlockin}. The circuit input a voltage signal into resistive nanowire element $R_{NW}$. To compare it with our circuit (Fig.5.4\hbox {}), we transform the voltage input into an equivalent current input in \textbf {(b)}. The $I_{NW} = (V_{Ref} - V_{in})/R_{NW}$ and $\Delta i = \Delta vi /R_{NW}$\relax }}{43}
+\contentsline {figure}{\numberline {5.4}{\ignorespaces \relax }}{44}
+\contentsline {figure}{\numberline {5.5}{\ignorespaces \textbf {(a)} The transimpedance block and the \textbf {(b)} schematic\relax }}{45}
+\contentsline {figure}{\numberline {5.6}{\ignorespaces The ac simulation results of TIA. The x-axis is the input signal frequency. \textbf {(a)} is the $V_{out}$ and \textbf {(b)} is the input-referred noise (A\^2).\relax }}{45}
+\contentsline {figure}{\numberline {5.7}{\ignorespaces The dc simulation results of TIA. The x-axis represents positive/negative input current (log scale). \textbf {(a)} is the $V_{out}$ responding to the positive input current while \textbf {(c)} is to the negative input current. \textbf {(b)} and \textbf {(d)} are the derivative of $V_{out}$ of input current ($\frac {\partial V_{out}}{\partial {I_{in}}}$) from \textbf {(a)} and \textbf {(c)} respectively.\relax }}{46}
+\contentsline {figure}{\numberline {5.8}{\ignorespaces Block diagram of DC-sweep mode. The $Iin$ refers to the Ibias and $Vout$ refers to the output voltage of OP, which is also the gate voltage of nanowire (Fig.5.1\hbox {}). The $gm(I_D)$ is the transconductance of nanowire whose values depends on $I_D$.\relax }}{48}
+\contentsline {figure}{\numberline {5.9}{\ignorespaces \relax }}{48}
+\contentsline {figure}{\numberline {5.10}{\ignorespaces The illustration of the loop gain test with several poles and zero marked.\relax }}{50}
+\contentsline {figure}{\numberline {5.11}{\ignorespaces (a)The feedback OP block and its (b) schematic\relax }}{51}
+\contentsline {figure}{\numberline {5.12}{\ignorespaces Post-simulation result of the dc sweep of Ibias in Fig.5.1\hbox {}. \textbf {(a)} is the $I_D$-$V_G$ curves of $I_D$ and $I_{bias}$. \textbf {(b)} is the $g_m$-$V_G$ curves of intrinsic $g_m$ and measured $g_m$. \textbf {(c)} is the ratio of the difference between two $g_m$ (error).\relax }}{52}
+\contentsline {figure}{\numberline {5.13}{\ignorespaces Results of the ac simulation of the loop gain and phase (Bode plot) with different $g_m$ value ($200n$, $2u$, $20u$). These $g_m$ value is selected according to DC-sweep mode specification we set in chapter 3 (section.3.4\hbox {}).\relax }}{53}
+\contentsline {figure}{\numberline {5.14}{\ignorespaces The current mirror structure of the current source Ibias.\relax }}{54}
+\contentsline {figure}{\numberline {5.15}{\ignorespaces Block diagram of the second stage circuit\relax }}{55}
+\contentsline {figure}{\numberline {5.16}{\ignorespaces Block diagram of the second stage circuit.\relax }}{56}
+\contentsline {figure}{\numberline {5.17}{\ignorespaces DC response of the output of our analog subtractor. (a)The x-axis is the difference between positive input and negative input ($V_x - V_{Ref}$). (b) The x-axis is the voltage of $V_z$ \relax }}{57}
+\contentsline {figure}{\numberline {5.18}{\ignorespaces Five corners output DC response (vout) and derivative ($dvout/dvin$) when being operated under the amplification rate of (a)1, (b)10, (c)100.\relax }}{59}
+\contentsline {figure}{\numberline {5.19}{\ignorespaces The block diagram of the Transient Measurement circuit. We simulate it by sending ac signal through the voltage source Vg.\relax }}{60}
+\contentsline {figure}{\numberline {5.20}{\ignorespaces The gain of $\frac {V_{out}}{I_{in}}$ when the voltage gain of the second stage is 100.\relax }}{60}
+\contentsline {figure}{\numberline {5.21}{\ignorespaces The input referred noise when the amplification rate of the second stage is 100.\relax }}{61}
+\contentsline {figure}{\numberline {5.22}{\ignorespaces The block diagram of Transient Measurement circuit. We simulate it by sending ac signal to the source of the nanowire.\relax }}{62}
+\contentsline {figure}{\numberline {5.23}{\ignorespaces The transient analysis. The gain of $A_{amp}$ is 10. The $g_m$ is swept from $1\mu $ to $10\mu $.\relax }}{63}
+\contentsline {figure}{\numberline {5.24}{\ignorespaces The ac analysis of the transient simulation result in Fig.5.23\hbox {}.\relax }}{63}
+\contentsline {figure}{\numberline {5.25}{\ignorespaces The transient analysis. The gain of $A_{amp}$ is 100. The $g_m$ is swept from $1\mu $ to $6\mu $. There are two curves have the output saturation problem. This is because of the offset current flowing through $R_{TIA}$. It can be solved by increasing the current provided by Ibias.\relax }}{64}
+\contentsline {figure}{\numberline {5.26}{\ignorespaces The ac analysis of the transient simulation result in Fig.5.25\hbox {}.\relax }}{64}
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {6.1}{\ignorespaces The fronted circuit\relax }}{65}
+\contentsline {figure}{\numberline {6.2}{\ignorespaces \textbf {(a)} The Ibias circuit. \textbf {(b)} The relation between biasing current ($I_{bias}$) and resistance of the external resistor.\relax }}{66}
+\contentsline {figure}{\numberline {6.3}{\ignorespaces The dc simulation results of TIA. The x-axis represents positive/negative input current (log scale). \textbf {(a)} is the $V_{out}$ responding to the positive input current while \textbf {(c)} is to the negative input current. \textbf {(b)} and \textbf {(d)} are the partial derivative of $V_{out}$ with respect to input current ($\frac {\partial V_{out}}{\partial {I_{in}}}$) from (a) and (c) respectively.\relax }}{67}
+\contentsline {figure}{\numberline {6.4}{\ignorespaces The output voltage of the feedback OP when the negative input is applied with a sinusoidal signal. This input sinusoidal signal has frequency of $1$Hz and amplitude of $2m V$. The positive input of OP is biased with a constant voltage generated by the chip (VRef in Fig.6.5\hbox {}). The output signal has amplitude around $2 V$, which means that the gain of OP is about $1k$.\relax }}{68}
+\contentsline {figure}{\numberline {6.5}{\ignorespaces DC-sweep mode circuit\relax }}{68}
+\contentsline {figure}{\numberline {6.6}{\ignorespaces The measurement result of DC-sweep mode circuit. $I_{bias}$ is the biasing current. $I_D$ is the current flowing through the nanowire device. One can observe a separation between two curves in low current section ($< 1\mu A$).\relax }}{69}
+\contentsline {figure}{\numberline {6.7}{\ignorespaces The $g_m$-$I_D$ curve. It is obtained from the $I_D$-$V_G$ curve in Fig.6.6\hbox {}. ``Circuit fails'' means the two curves in Fig.6.6\hbox {} are separated where ``circuit works'' means they are overlapped.\relax }}{70}
+\contentsline {figure}{\numberline {6.8}{\ignorespaces The illustration of the input-output response of the feedback OP.\relax }}{70}
+\contentsline {figure}{\numberline {6.9}{\ignorespaces The $V_{TIA}$. The x-axis is the corresponding gate voltage. With the information from Fig.6.6\hbox {}, we found that the $V_{TIA}$ is not equal to $V_{Ref}$ no matter feedback mechanism works well or not.\relax }}{71}
+\contentsline {figure}{\numberline {6.10}{\ignorespaces The left section is the schematic of the feedback OP including the local biasing circuit and OP circuit. The right section is the global biasing circuit for generating two global biasing voltages: $V_{bi}$, $V_{Ref}$. The Iin is an external current source.\relax }}{72}
+\contentsline {figure}{\numberline {6.11}{\ignorespaces The layout of the feedback OP including the local biasing circuit. \relax }}{73}
+\contentsline {figure}{\numberline {6.12}{\ignorespaces \textbf {(a)} The block diagram of Transient Measurement circuit. \textbf {(b)} The schematic of the second stage circuit.\relax }}{75}
+\contentsline {figure}{\numberline {6.13}{\ignorespaces The second stage circuit measurement approach.\relax }}{76}
+\contentsline {figure}{\numberline {6.14}{\ignorespaces The noise ocsillation problem\relax }}{76}
+\contentsline {figure}{\numberline {6.15}{\ignorespaces The post-simulation of the phase margin test of the amplifier when amplification rate is 1. \textbf {(a)} Without the parasitic capacitor, the phase margin is 108 degree. \textbf {(b)} With the parasitic capacitor (modeled by a $5p F$ capacitor), the phase margin becomes 30 degree.\relax }}{78}
+\contentsline {figure}{\numberline {6.16}{\ignorespaces The feedback network and loop gain computation structure of the amplifier with \textbf {(a), (b)} $A_{amp} = 1$ and \textbf {(c), (d)} $A_{amp} = 10$ or $100$.\relax }}{79}
+\contentsline {figure}{\numberline {6.17}{\ignorespaces The post-simulation of the phase margin test of the amplifier when amplification rate is 10. With the parasitic capacitor loaded on the output(modeled by a $5p F$ capacitor), the phase margin is 73 degree\relax }}{79}
+\contentsline {figure}{\numberline {6.18}{\ignorespaces The input-output response of the second stage circuit ($A_{amp} = 1$).\relax }}{80}
+\contentsline {figure}{\numberline {6.19}{\ignorespaces The input-output response of the second stage circuit. The input is Vz, which decides the output offset of the circuit.\relax }}{81}
+\contentsline {figure}{\numberline {6.20}{\ignorespaces The input output signal of the second stage circuit in time domain when $A_{amp}$ is \textbf {(a)} 1, \textbf {(b)} 10 and \textbf {(c)} 100.\relax }}{82}
+\contentsline {figure}{\numberline {6.21}{\ignorespaces The gain and bandwidth of Transient Measurement circuit. The $A_{amp}$ is 10 in \textbf {(a)} and 100 in \textbf {(b)}.\relax }}{83}
+\contentsline {figure}{\numberline {6.22}{\ignorespaces Input referred noise of Transient Measurement circuit.\relax }}{84}
+\contentsline {figure}{\numberline {6.23}{\ignorespaces \relax }}{85}
+\contentsline {figure}{\numberline {6.24}{\ignorespaces The output signal of the measurement using source of nanowire as input. The $gm$ of nanowire in two figures are different by using testing solution with different pH values. The $gm$ of nanowire is $1\mu $ in \textbf {(a)} and $1.8\mu $ in \textbf {(b)}. \relax }}{87}
+\contentsline {figure}{\numberline {6.25}{\ignorespaces The variability-resisting method.\relax }}{89}
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {7.1}{\ignorespaces The layout of the Readout circuit\relax }}{90}
