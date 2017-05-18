@@ -107,7 +107,7 @@ document.addEventListener('drop', (evt) => {
 
 // Main searching Process
 
-//// Search input Fignumber in lof
+//// Search input fignumber in lof
 function searchFile() {
     var success = false
     let CONTINUE = true
@@ -132,6 +132,7 @@ function searchFile() {
 function printFail(text){
     const img = document.getElementById('myImg')
     const imgsrc = document.getElementById('imgsrc')
+    img.src = ''
     imgsrc.style.marginLeft = 10;
     // console.log(imgsrc.style.marginLeft)
     imgsrc.textContent = text
@@ -185,7 +186,8 @@ function parseFigTex(filePath) {
 }
 
 function checkFunc(reader) {
-    if(checkFunc_loop(reader)){     // If file don't has caption and the search result need to be checked
+    let togo = checkFunc_loop(reader)
+    if(togo){     // If file don't has caption and the search result need to be checked
         createYesNo()
         document.getElementById('yes').addEventListener('click', () => {
             removeYesNo()
@@ -302,7 +304,7 @@ document.getElementById("button").addEventListener("click", function(event) {
     removeYesNo()
     figure.clear()
     resultClear()
-    figure.number = document.getElementById('fileName').value
+    figure.number = document.getElementById('fignumber').value
     // Check input fig number format
     if(!figure.number){
         printFail("Empty figure name!");
