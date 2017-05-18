@@ -212,8 +212,6 @@ function checkFunc_loop(reader){       // Check a file, may stop when met the ta
                     figure.source = source_temp[0]
                     printResult()
                     CONTINUE = false
-                    state = 0        // No need to search more & No need for check
-                    return state
                 }
             } else {
                 if(!figure.caption){
@@ -221,16 +219,12 @@ function checkFunc_loop(reader){       // Check a file, may stop when met the ta
                     figure.source = source_temp[0]
                     printResult()
                     CONTINUE = false
-                    state = 3      // Need to search more & Need to be check
-                    return state
                 }
             }
 
         }
 
     }
-    // printFail("UNCAUGHT ERROR: Can't find the figure")
-    return 1
 }
 
 
@@ -241,28 +235,14 @@ function checkFunc_loop(reader){       // Check a file, may stop when met the ta
     // Return false if checkFunc_loop return false, that is
     // Return true if
 function checkFunc(reader) {
-    let stateNext = checkFunc_loop(reader)
-    if(stateNext === 3){     // If file don't has caption and the search result need to be checked
-        createYesNo()
-        document.getElementById('yes').addEventListener('click', () => {
-            removeYesNo()
-            stateNext = 0
-            return stateNext
-        })
-        document.getElementById('no').addEventListener('click', () => {
-            figure.source = null
-            removeYesNo()
-            stateNext = checkFunc(reader)
-            if(stateNext === 1){
-                return true
-            } else{
-
-            }
-            return stateNext
-        })
-    } else {
-        return false
-    }
+    createYesNo()
+    document.getElementById('yes').addEventListener('click', () => {
+        removeYesNo()
+    })
+    document.getElementById('no').addEventListener('click', () => {
+        figure.source = null
+        removeYesNo()
+    })
 }
 
 
@@ -270,7 +250,6 @@ function checkFunc(reader) {
 function parseFigTex(filePath) {
     var reader = new myRl.FileLineReader(filePath)
     return checkFunc(reader)
-
 }
 
 
@@ -287,25 +266,14 @@ function dirRender(path) {
         if(path.type === 'file'){
             parseFigTex(path.content)
         } else if (path.type === 'dir') {
-            //
             fs.readdir(path.content, (err, files) => {
-                // console.log(files);
-                myEF.myEveryFiles(files, function(file) {
-                    let state = parseFigTex(path.content.concat(file))
-                    if(state === 3 | state === 1)
-                        return true
-                    else if(state === 0)
-                        return false
-                    else
-                        console.error("ERROR: state error. state is ".concat(state));
+                console.log(files);
+                files.every(function(file) {
+                    parseFigTex(path.content.concat(file))
                 })
             })
-            //
         }
-    }else {
-        console.error("uncaught dir read error");
     }
-
 }
 
 ////// Check the directory(or file) is valid
