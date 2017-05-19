@@ -54,7 +54,7 @@ let objectFig = new Figure()
 // ipc Process
 ipcRenderer.on('main-render', () => {
     ipcRenderer.on('cwd', (event, cwd) => {
-        const lofPath = path.join(cwd, 'main.lof');
+        const lofPath = path.join(cwd, "main.lof");
         fs.stat(lofPath, (err, stats) => {
             if (err) {
                 createLOFzone((p) => {
@@ -67,6 +67,9 @@ ipcRenderer.on('main-render', () => {
                 // doSomething(lofPath)
             }
         })
+        const dataPath = path.join(cwd, "data")
+        getData.value = dataPath
+        emitter.emit('Default Data Path loaded', dataPath)
     });
 });
 
@@ -76,30 +79,7 @@ function lofListeningBeSearch(lofPath) {
     });
 }
 
-// ipc Process
-// ipcRenderer.on('main-render', (event, message) => {
-//     if(message === 'ready'){
-//         ipcRenderer.on('path', (event, path) => {
-//             globalpathEmitter.emit('got path!!', path);
-//
-//             getData.value = path.concat("data/")
-//             lofpath = path.concat("main.lof")
-//             fs.stat(lofPath, (err, stats) => {
-//                 if (err) {
-//                     createLOFzone()
-//                 }
-//             })
-//             let mEvent = document.createEvent('Event')
-//             mEvent.initEvent('input')
-//             getData.dispatchEvent(mEvent)
-//         })
-//     }
-// })
-
-
-
 // Drop and select lof
-
 function handleDragOver(evt) {
   evt.stopPropagation();
   evt.preventDefault();
@@ -162,7 +142,6 @@ function searchFile(lofPath) {
     const rl = readline.createInterface({
         input: fs.createReadStream(lofPath),
     });
-
     let captionArray = []
     rl.on('line', (line) => {
         // console.log(line);
@@ -188,12 +167,51 @@ emitter.on('fig caption get!!', (cpation) => {
     console.log(`find "${cpation}"`);
 })
 
-////// Process render
+
+ // Check validation of data
+function checkDataPath (path){
+    fs.stat(path, (err, stats) => {
+        if(err){
+            dirValid.textContent = "Invalid"
+        }
+    })
+    // fs.readdir(path, (err, files) => {
+        // if(err !== null){
+        //     if(!fs.existsSync(path)){
+        //     } else {
+        //         // path is a file
+        //         if(!path.content.includes(".tex")){
+        //             dirValid.textContent = "Valid (Not a .tex file)"
+        //         } else {
+        //             dirValid.textContent = "Valid (file)"
+        //         }
+        //         data = [path]
+        //     }
+        // }
+        // else{
+        //     if(path.charAt(path.length - 1) !== "/"){
+        //         dirValid.textContent = "Invalid (maybe need a '/')"
+        //         path = null
+        //     } else{
+        //         dirValid.textContent = "Valid (directory)"
+        //         data = files
+        //     }
+        // }
+    // })
+}
+
+emitter.on('Default Data Path loaded', function(path){
+    checkDataPath(path)
+})
+
 getData.addEventListener('input', function() {
     // console.log("input");
     dirPath = getData.value
-    checkDir(dirPath)
+    checkDataPath(dirPath)
 }, false);
+
+
+
 
 //// Search input fignumber in lof
 // function searchFile() {
@@ -411,34 +429,6 @@ function dataRender(files) {
 }
 
 ////// Check the directory(or file) is valid
-function checkDir(path){
-    // console.log("do check");
-    fs.readdir(path, (err, files) => {
-        if(err !== null){
-            if(!fs.existsSync(path)){
-                path = 'null'
-                dirValid.textContent = "Invalid"
-            } else {
-                // path is a file
-                if(!path.content.includes(".tex")){
-                    dirValid.textContent = "Valid (Not a .tex file)"
-                } else {
-                    dirValid.textContent = "Valid (file)"
-                }
-                data = [path]
-            }
-        }
-        else{
-            if(path.charAt(path.length - 1) !== "/"){
-                dirValid.textContent = "Invalid (maybe need a '/')"
-                path = null
-            } else{
-                dirValid.textContent = "Valid (directory)"
-                data = files
-            }
-        }
-    })
-}
 
 
 
