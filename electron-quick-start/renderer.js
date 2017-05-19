@@ -1,12 +1,7 @@
 const fs = require('fs');
 const readline = require('readline');
 const {ipcRenderer} = require('electron')
-// self define
-const myRl = require('./LIB/myReadLine')
-const myEF = require('./LIB/myEveryFiles.js')
-let globalpath
-let dirPath
-let data
+
 // html element
 const img = document.getElementById("myImg")
 const imgBlock = document.getElementById('imgBlock');
@@ -19,19 +14,30 @@ const lofBox = document.getElementById('lofBox')
 const button_find = document.getElementById("button_find")
 const getFignumber = document.getElementById("getFignumber")
 
-let lofpath
-let figure = {
-    number: null,
-    source: null,
-    exist: false,
-    caption: null,
-    clear: function(){
-        figure.number = null
-        figure.source = null
-        figure.exist = null
-        figure.caption = null
+// DataType
+function Figure(number, source , exist, caption){
+    this.number = number;
+    this.source = source;
+    this.exist = exist;
+    this.caption = caption;
+    this.clear = function(){
+        this.number = undefined
+        this.source = undefined
+        this.exist = undefined
+        this.caption = undefined
     }
 };
+
+// self define
+const myRl = require('./LIB/myReadLine')
+const myEF = require('./LIB/myEveryFiles.js')
+let globalpath
+let dirPath
+let data
+let lofpath
+let objectFig = new Figure()
+//
+
 
 
 // ipc Process
@@ -126,14 +132,15 @@ function searchFile() {
         while(CONTINUE){
             let input = reader.nextLine()
             CONTINUE = reader.hasNextLine()
-            if(input.match("{".concat(figure.number, "}"))){
-                figure.exist = true
+            if(input.match("{".concat(objectFig.number, "}"))){
+                objectFig.exist = true
                 let caption = input.match(/ignorespaces.*relax/g)[0]
-                figure.caption = caption.replace('ignorespaces ', '').replace('\\relax', '').replace(/\s/g, '').replace(/Fig.*\\hbox\{\}/g, '')
+                objectFig.caption = caption.replace('ignorespaces ', '').replace('\\relax', '').replace(/\s/g, '').replace(/Fig.*\\hbox\{\}/g, '')
                 CONTINUE = false
             }
         }
-        if(!figure.exist){
+        if(!objectFig.exist){
+            objectFig.exist = false
             printFail("No such figure exist or the .lof file is wrong!")
         }
     } else {
@@ -152,9 +159,9 @@ function printFail(text){
 }
 function printResult(){
     imgsrc.style.marginLeft = 332;
-    imgsrc.textContent = "This figure is at '".concat(figure.source.replace('\{', '').replace('\}', '')).replace(/\//g, ' / ').concat("'")
-    if(!figure.source.includes(".eps")){
-        img.src = globalpath.concat(figure.source.replace('{', '').replace('}', ''))
+    imgsrc.textContent = "This figure is at '".concat(objectFig.source.replace('\{', '').replace('\}', '')).replace(/\//g, ' / ').concat("'")
+    if(!objectFig.source.includes(".eps")){
+        img.src = globalpath.concat(objectFig.source.replace('{', '').replace('}', ''))
     } else{
         img.src = "Img/EPSerror.jpeg"
     }
@@ -218,27 +225,95 @@ function removeYesNo(){
 // }
 
 
-function checkFunc(reader) {
-    createYesNo()
-    document.getElementById('yes').addEventListener('click', () => {
-        removeYesNo()
-    })
-    document.getElementById('no').addEventListener('click', () => {
-        figure.source = null
-        removeYesNo()
-    })
+function checkFunc(fig) {
+    // createYesNo()
+    // document.getElementById('yes').addEventListener('click', () => {
+    //     removeYesNo()
+    // })
+    // document.getElementById('no').addEventListener('click', () => {
+    //     objectFig.source = undefined
+    //     removeYesNo()
+    // })
 }
 
-// function parseFigTex(filePath) {
-//     var reader = new myRl.FileLineReader(filePath)
-//
-//     return checkFunc(reader)
-// }
+function returnSubjFig(figs){
+    if(figs.length === 1){
+        return figs[0]
+    } else {
+        myEF.myEveryFiles(figs, checkFunc)
+    }
+}
+
+function compareFigs(figA, figB){
+    if (figA.source === figB.source &&
+        figA.number === figB.number &&
+        figA.caption === figB.caption &&
+        figA.exist === figB.exist
+    ){
+        return true
+    } else{
+        return false
+    }
+}
+
+function mergeFigs(figB, figA){
+    // figA has higher priority
+    return Object.assign({}, figB, figA)
+}
+
+function copyFig(fig){
+    return Object.assign({}, fig)
+}
+
+function extractArray(bools, objects){
+    let l = bools.length
+    let output = []
+    for(var i = 0; i < l; i++){
+        if(bools[i]){
+            ouput.push(Object.assign({}, objects[i]))
+        }
+    }
+    return output
+}
+
+function searchCaption(file){
+    let queue = [];
+    const rl = readline.createInterface({
+        input: fs.createReadStream(file),
+    });
+    // number, source , exist, caption, clear
+    let subjectFigureHolder = new Figure()
+    rl.on('line', (line) => {
+        if(line.match("\\includegraphics")){
+            subjectFigureHolder.exist = true
+            subjectFigureHolder.source = line.match(/\{.*\}/)
+        }
+        if(line.match("\\input")){
+            subjectFigureHolder.exist = true
+            subjectFigureHolder.source = line.match(/\{.*\}/)
+        }
+        if(line.match("\caption") && (subjectFigureHolder.source)){
+            subjectFigureHolder.caption = line.replace('\\caption\{', '').replace(/\}$/, '').replace(/\s/g, '').replace(/Fig\.\\ref\{.*\}/g, '')
+            queue.push(copyFig(subjectFigureHolder))
+        }
+    })
+    const compareFigtoObjF = function(subj){
+        return compareFigs(objectFig, subj)
+    }
+    let compareResults = queue.map(compareFigtoObjF)
+    let subjectFigure = returnSubjFig(extractArray(compareResults, compareFigtoObjF))
+    if(subjectFigure){
+        mergeFigs(objectFig, subjectFigure)
+        return true
+    } else {
+        return false
+    }
+}
 
 
 function dataRender(files) {
     myEF.myEveryFiles(files, (file) => {
-        return searchCaption(file)
+        return (!searchCaption(file))
     })
 }
 
@@ -261,7 +336,7 @@ function checkDir(path){
             }
         }
         else{
-            if(path.charAt(path.content.length - 1) !== "/"){
+            if(path.charAt(path.length - 1) !== "/"){
                 dirValid.textContent = "Invalid (maybe need a '/')"
                 path = null
             } else{
@@ -281,21 +356,24 @@ getData.addEventListener('input', function() {
 
 button_find.addEventListener("click", function(event) {
     removeYesNo()
-    figure.clear()
+    objectFig.clear()
     resultClear()
-    figure.number = getFignumber.value
+    let num = getFignumber.value
     // Check input fig number format
-    if(!figure.number){
+    if(!num){
         printFail("Empty figure name!");
     } else{
-        let num = figure.number.match(/\d+\.\d+/g)
-        if(!num) {
-            printFail("Wrong input format");
+        if(num.match(/\d+\.\d+/g)) {
+            objectFig.number = num[0]
+            searchFile(dataRender(data))
         } else{
-            figure.number = num[0]
-            searchFile()
-            dataRender(data)
+            printFail("Wrong input format");
         }
     }
 }, false)
 // console.log(document.getElementById('imgsrc'));
+
+
+
+
+// About array: stack, queue
