@@ -170,9 +170,9 @@ function checkDataPath (path){
         if(err){
             dirValid.textContent = "Invalid"
         } else {
-            if(stats.isFile()){
+            if(stats.isDirectory()){
                 dirValid.textContent = "Valid (directory)"
-            } else if(stats.isDirectory()) {
+            } else if(stats.isFile()) {
                 if(path.includes(".tex")){
                     dirValid.textContent = "Valid (Not a .tex file)"
                 } else {
@@ -197,7 +197,7 @@ getData.addEventListener('input', function() {
 
 emitter.on('DataPath get!!', (files) => {
     emitter.on('fig caption get!!', (cpation) => {
-
+        console.log(cpation);
     })
 })
 
