@@ -72,19 +72,16 @@ ipcRenderer.on('main-render', () => {
 // ipc Process
 ipcRenderer.on('main-render', (event, message) => {
     if(message === 'ready'){
-
-
-
-
         ipcRenderer.on('path', (event, path) => {
             globalpathEmitter.emit('got path!!', path);
 
             getData.value = path.concat("data/")
             lofpath = path.concat("main.lof")
-            if(!fs.existsSync(lofpath)){
-                // console.log("No .lof file");
-                createLOFzone()
-            }
+            fs.stat(lofPath, (err, stats) => {
+                if (err) {
+                    createLOFzone()
+                }
+            })
             let mEvent = document.createEvent('Event')
             mEvent.initEvent('input')
             getData.dispatchEvent(mEvent)
@@ -95,19 +92,6 @@ ipcRenderer.on('main-render', (event, message) => {
 
 
 // Drop and select lof
-function handleFileSelect(evt) {
-    evt.stopPropagation();
-    evt.preventDefault();
-
-    var files = evt.dataTransfer.files; // FileList object.
-    lofpath = files[0].path
-    if(fs.existsSync(lofpath))
-        modifyLOFzone("Your .lof is '".concat(lofpath, "'"))
-    else
-        modifyLOFzone("UNCAUGHT ERROR: This file doesn't exist ")
-    // console.log(files);
-    // console.log(lofpath);
-}
 
 function handleDragOver(evt) {
   evt.stopPropagation();
@@ -116,10 +100,12 @@ function handleDragOver(evt) {
 }
 
 function checkLOF(lofPath) {
-    if(fs.existsSync(lofPath))
-        modifyLOFzone(`Your .lof is "${lofPath}"`);
-    else
-        modifyLOFzone("UNCAUGHT ERROR: This file doesn't exist ")
+    fs.stat(lofPath, (err, stats) => {
+        if(err)
+            modifyLOFzone("UNCAUGHT ERROR: This file doesn't exist ")
+        else
+            modifyLOFzone(`Your .lof is "${lofPath}"`);
+    })
 }
 
 function createLOFzone(callback){
@@ -139,7 +125,6 @@ function createLOFzone(callback){
         callback(lofPath)
         checkLOF(lofPath)
     }
-
     , false);
     // Select LOF
     drop_zone.addEventListener('click', (evt) => {
