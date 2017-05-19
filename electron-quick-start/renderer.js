@@ -155,24 +155,26 @@ function searchFile() {
         });
         const myEmitter = new MyEmitter();
         let captionArray = new NotifyArray([], myEmitter)
-        myEmitter.on('push', () => {
-            console.log(captionArray)
-        })
         rl.on('line', (line) => {
             if(line.includes("\\numberline ".concat("{", objectFig.number, "}"))){
-                objectFig.exist = true
                 let caption = line.match(/ignorespaces.*relax/g)[0]
                 let captionToWrite = (caption.replace('ignorespaces ', '').replace('\\relax', '').replace(/\s/g, '').replace(/Fig.*\\hbox\{\}/g, ''))
                 captionArray.push(captionToWrite)
             }
         })
-
-        if(captionArray.length > 1){
-            console.error("ERROR: Repeated figure number appear in .lof file");
-        } else {
-            objectFig.caption = captionArray[0]
-        }
-        if(!objectFig.exist){
+        rl.on('close', () => {
+            console.log(captionArray);
+        })
+        myEmitter.on('push', () => {
+            if(captionArray.length > 1){
+                console.error("ERROR: Repeated figure number appear in .lof file");
+            } else {
+                objectFig.caption = captionArray[0]
+                objectFig.exist = true
+            }
+        })
+        console.log(objectFig);
+        if(objectFig.exist !== true){
             objectFig.exist = false
             printFail("No such figure exist or the .lof file is wrong!")
         }
@@ -318,9 +320,10 @@ function searchCaption(file){
     //     writev(bufferv){}
     // })
     const myEmitter = new MyEmitter();
-    let queue = new NotifyArray([], myEmitter.on('event', () => {
-      console.log(queue)
-    }))
+    let queue = new NotifyArray([], myEmitter)
+    myEmitter.on('push', () => {
+        console.log(queue)
+    })
 
     const rl = readline.createInterface({
         input: fs.createReadStream(file),
