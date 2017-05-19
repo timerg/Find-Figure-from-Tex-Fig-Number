@@ -153,31 +153,29 @@ function searchFile() {
         const rl = readline.createInterface({
             input: fs.createReadStream(lofpath),
         });
-        const myEmitter = new MyEmitter();
-        let captionArray = new NotifyArray([], myEmitter)
+        // const myEmitter = new MyEmitter();
+        // let captionArray = new NotifyArray([], myEmitter)
+        let captionArray = []
         rl.on('line', (line) => {
             if(line.includes("\\numberline ".concat("{", objectFig.number, "}"))){
+                objectFig.exist = true
                 let caption = line.match(/ignorespaces.*relax/g)[0]
                 let captionToWrite = (caption.replace('ignorespaces ', '').replace('\\relax', '').replace(/\s/g, '').replace(/Fig.*\\hbox\{\}/g, ''))
                 captionArray.push(captionToWrite)
             }
         })
         rl.on('close', () => {
-            console.log(captionArray);
-        })
-        myEmitter.on('push', () => {
             if(captionArray.length > 1){
                 console.error("ERROR: Repeated figure number appear in .lof file");
             } else {
-                objectFig.caption = captionArray[0]
-                objectFig.exist = true
+                objectFig.caption = captionArray.content[0]
+            }
+            console.log(objectFig);
+            if(objectFig.exist !== true){
+                objectFig.exist = false
+                printFail("No such figure exist or the .lof file is wrong!")
             }
         })
-        console.log(objectFig);
-        if(objectFig.exist !== true){
-            objectFig.exist = false
-            printFail("No such figure exist or the .lof file is wrong!")
-        }
     } else {
         printFail(".lof file is not loaded!")
     }
@@ -273,8 +271,10 @@ function checkFunc(fig) {
 
 function returnSubjFig(figs){
     if(figs.length === 1){
+        console.log("only one matching figs");
         return figs[0]
     } else {
+        // console.log("Multiple matching figs");
         myEF.myEveryFiles(figs, checkFunc)
     }
 }
@@ -282,11 +282,12 @@ function returnSubjFig(figs){
 function compareFigs(figA, figB){
     if (figA.source === figB.source &&
         figA.number === figB.number &&
-        figA.caption === figB.caption &&
-        figA.exist === figB.exist
+        figA.caption === figB.caption
     ){
+        console.log("[compareFigs]: fig match");
         return true
     } else{
+        console.log("[compareFigs]: No fig match");
         return false
     }
 }
@@ -312,19 +313,7 @@ function extractArray(bools, objects){
 }
 
 function searchCaption(file){
-    // let buffer = stringer(100)      // If a line from the file has length > 100. Things get wrong (exceed length).
-    // let bufferv = []
-    // const Writable = require('stream').Writable
-    // const myWritable = new Writable({
-    //     write(buffer){},
-    //     writev(bufferv){}
-    // })
-    const myEmitter = new MyEmitter();
-    let queue = new NotifyArray([], myEmitter)
-    myEmitter.on('push', () => {
-        console.log(queue)
-    })
-
+    let queue = []
     const rl = readline.createInterface({
         input: fs.createReadStream(file),
         // output: myWritable
@@ -343,22 +332,25 @@ function searchCaption(file){
             subjectFigureHolder.caption = line.replace('\\caption\{', '').replace(/\}$/, '').replace(/\s/g, '').replace(/Fig\.\\ref\{.*\}/g, '')
             queue.push(copyFig(subjectFigureHolder))
             // console.log(queue);
-            rl.write(subjectFigureHolder)
             subjectFigureHolder.clear()
         }
     })
 
-    const compareFigtoObjF = function(subj){
-        return compareFigs(objectFig, subj)
-    }
-    let compareResults = queue.map(compareFigtoObjF)
-    let subjectFigure = returnSubjFig(extractArray(compareResults, compareFigtoObjF))
-    if(subjectFigure){
-        mergeFigs(subjectFigure, objectFig)
-        return true
-    } else {
-        return false
-    }
+    rl.on('close', () => {
+        function compareFigtoObjF(subj){
+            return compareFigs(objectFig, subj)
+        }
+        console.log(queue);
+        let compareResults = queue.map(compareFigtoObjF)
+        let subjectFigure = returnSubjFig(extractArray(compareResults, subjectFigureHolder))
+        if(subjectFigure){
+            objectFig = mergeFigs(subjectFigure, objectFig)
+
+            return true
+        } else {
+            return false
+        }
+    })
 }
 
 
@@ -366,6 +358,7 @@ function dataRender(files) {
     myEF.myEveryFiles(files, (file) => {
         return (!searchCaption(dirPath.concat(file)))
     })
+    console.log(objectFig);
 }
 
 ////// Check the directory(or file) is valid
@@ -417,8 +410,8 @@ button_find.addEventListener("click", function(event) {
         fignumber = num.match(/\d+\.\d+/g)
         if(num.match(/\d+\.\d+/g)) {
             objectFig.number = fignumber[0]
-            searchFile()
-            // searchFile(dataRender(data))
+            // searchFile()
+            searchFile(dataRender(data))
         } else{
             printFail("Wrong input format");
         }
