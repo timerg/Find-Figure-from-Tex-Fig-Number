@@ -47,17 +47,18 @@ ipc.on('open-file-dialog', function (event) {
 app.on('ready', () => {
     win = createWindow()
     win.webContents.on('did-finish-load', () => {
-        win.webContents.send('main-render', 'ready')
+        win.webContents.send('main-render')
         if (process.platform !== 'darwin'){
             let globalPath = app.getAppPath().replace(/\\[a-zA-Z0-9_-]+\\resources\\app/gi, '\\')
-            win.webContents.send('path', globalPath)
+            win.webContents.send('cwd', globalPath)
         } else {
             let globalPath
-            if(app.getAppPath().includes("electron-quick-start"))
-                globalPath = app.getAppPath().concat('\/..\/')                  // from developing stage
-            else
+            if(app.getAppPath().includes("electron-quick-start")) {
+                globalPath = path.join(app.getAppPath(), '../')                  // from developing stage
+            } else {
                 globalPath = app.getAppPath().replace(/\/\w+\.app\/Contents\/Resources\/app/gi, '\/')
-            win.webContents.send('path', globalPath)
+            }
+            win.webContents.send('cwd', globalPath)
         }
     })
 })

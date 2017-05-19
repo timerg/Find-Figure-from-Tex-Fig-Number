@@ -2,6 +2,7 @@ const fs = require('fs');
 const readline = require('readline');
 const {ipcRenderer} = require('electron')
 const stream = require('stream');
+const path = require('path');
 const EventEmitter = require('events');
 class MyEmitter extends EventEmitter {}
 
@@ -29,39 +30,57 @@ function Figure(number, source , exist, caption){
         this.exist = undefined
         this.caption = undefined
     }
-};
-
-function NotifyArray(items, aEmitter){
-    this.content = items
-    this.length = this.content.length
-    this.map = function(func){
-        this.content.map(func)
-    }
-    this.push = function(item){
-        this.content.push(item)
-        aEmitter.emit('push')
-    }
-
 }
+
+
+// Event Emitter
+const emitter = new EventEmitter();
+const loffileEmitter = new MyEmitter();
+const dataEmitter = new MyEmitter();
+const figureEmitter = new MyEmitter();
+const globalpathEmitter = new MyEmitter();
+
 // self define
 const myRl = require('./LIB/myReadLine')
 const myEF = require('./LIB/myEveryFiles.js')
-let globalpath
+// let globalpath
 let dirPath
-let data
 let lofpath
+let data
 let objectFig = new Figure()
 //
 
+
+// ipc Process
+ipcRenderer.on('main-render', () => {
+    ipcRenderer.on('cwd', (event, cwd) => {
+        const lofPath = path.join(cwd, 'main.lof');
+        fs.stat(lofPath, (err, stats) => {
+            if (err) {
+                createLOFzone((p) => {
+                    // doSomething(p)
+                });
+            } else {
+                emitter.emit('lof', lofPath);
+                // doSomething(lofPath)
+            }
+        })
+    });
+})
 
 
 // ipc Process
 ipcRenderer.on('main-render', (event, message) => {
     if(message === 'ready'){
+
+
+
+
         ipcRenderer.on('path', (event, path) => {
-            globalpath = path;
-            getData.value = globalpath.concat("data/")
-            lofpath = globalpath.concat("main.lof")
+            globalpathEmitter.emit('got path!!', path);
+
+            getData.value = path.concat("data/")
+            lofpath = path.concat("main.lof")
             if(!fs.existsSync(lofpath)){
                 // console.log("No .lof file");
                 createLOFzone()
@@ -96,7 +115,14 @@ function handleDragOver(evt) {
   evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
 }
 
-function createLOFzone(){
+function checkLOF(lofPath) {
+    if(fs.existsSync(lofPath))
+        modifyLOFzone(`Your .lof is "${lofPath}"`);
+    else
+        modifyLOFzone("UNCAUGHT ERROR: This file doesn't exist ")
+}
+
+function createLOFzone(callback){
     let drop_zone = document.createElement("div")
     drop_zone.id = "drop_zone"
     drop_zone.appendChild(document.createTextNode(`Need '.lof' file.
@@ -104,7 +130,17 @@ function createLOFzone(){
     lofBox.appendChild(drop_zone)
     // Drop LOF
     drop_zone.addEventListener('dragover', handleDragOver, false);
-    drop_zone.addEventListener('drop', handleFileSelect, false);
+    drop_zone.addEventListener('drop', (evt) => {
+        evt.stopPropagation();
+        evt.preventDefault();
+
+        var files = evt.dataTransfer.files; // FileList object.
+        let lofPath = files[0].path
+        callback(lofPath)
+        checkLOF(lofPath)
+    }
+
+    , false);
     // Select LOF
     drop_zone.addEventListener('click', (evt) => {
         evt.preventDefault();
@@ -113,15 +149,12 @@ function createLOFzone(){
     }, false)
 
     ipcRenderer.on('selected-directory', function (event, path) {
-        lofpath = path[0]
-        if(fs.existsSync(lofpath)){
-            modifyLOFzone("Your .lof is '".concat(lofpath, "'"))
-        } else{
-            modifyLOFzone("UNCAUGHT ERROR: This file doesn't exist ")
-        }
+        callback(path[0]);
+        checkLOF(path[0])
     })
-
 }
+
+
 
 function modifyLOFzone(string){
     document.getElementById('drop_zone').textContent = string
@@ -153,8 +186,6 @@ function searchFile() {
         const rl = readline.createInterface({
             input: fs.createReadStream(lofpath),
         });
-        // const myEmitter = new MyEmitter();
-        // let captionArray = new NotifyArray([], myEmitter)
         let captionArray = []
         rl.on('line', (line) => {
             if(line.includes("\\numberline ".concat("{", objectFig.number, "}"))){
@@ -168,9 +199,9 @@ function searchFile() {
             if(captionArray.length > 1){
                 console.error("ERROR: Repeated figure number appear in .lof file");
             } else {
-                objectFig.caption = captionArray.content[0]
+                objectFig.caption = captionArray[0]
+
             }
-            console.log(objectFig);
             if(objectFig.exist !== true){
                 objectFig.exist = false
                 printFail("No such figure exist or the .lof file is wrong!")
@@ -194,7 +225,9 @@ function printResult(){
     imgsrc.style.marginLeft = 332;
     imgsrc.textContent = "This figure is at '".concat(objectFig.source.replace('\{', '').replace('\}', '')).replace(/\//g, ' / ').concat("'")
     if(!objectFig.source.includes(".eps")){
-        img.src = globalpath.concat(objectFig.source.replace('{', '').replace('}', ''))
+        globalpathEmitter.on('got path!!', (path) => {
+            img.src = path.concat(objectFig.source.replace('{', '').replace('}', ''))
+        });
     } else{
         img.src = "Img/EPSerror.jpeg"
     }
@@ -279,15 +312,15 @@ function returnSubjFig(figs){
     }
 }
 
-function compareFigs(figA, figB){
-    if (figA.source === figB.source &&
-        figA.number === figB.number &&
-        figA.caption === figB.caption
+function compareFigsCaption(figA, figB){
+    // console.log(figA.caption);
+    // console.log(figB.caption);
+    if (figA.caption === figB.caption
     ){
         console.log("[compareFigs]: fig match");
         return true
     } else{
-        console.log("[compareFigs]: No fig match");
+        console.log("[compareFigs]: fig not match");
         return false
     }
 }
@@ -306,7 +339,7 @@ function extractArray(bools, objects){
     let output = []
     for(var i = 0; i < l; i++){
         if(bools[i]){
-            ouput.push(Object.assign({}, objects[i]))
+            output.push(Object.assign({}, objects[i]))
         }
     }
     return output
@@ -320,13 +353,13 @@ function searchCaption(file){
     });
     let subjectFigureHolder = new Figure()
     rl.on('line', (line) => {
-        if(line.match("\\includegraphics")){
+        if(line.match(/\\includegraphics/g)){
             subjectFigureHolder.exist = true
-            subjectFigureHolder.source = line.match(/\{.*\}/)
+            subjectFigureHolder.source = line.match(/\{.*\}/)[0]
         }
-        if(line.match("\\input")){
+        if(line.match(/\\input/g)){
             subjectFigureHolder.exist = true
-            subjectFigureHolder.source = line.match(/\{.*\}/)
+            subjectFigureHolder.source = line.match(/\{.*\}/)[0]
         }
         if(line.match("\caption") && (subjectFigureHolder.source)){
             subjectFigureHolder.caption = line.replace('\\caption\{', '').replace(/\}$/, '').replace(/\s/g, '').replace(/Fig\.\\ref\{.*\}/g, '')
@@ -338,9 +371,10 @@ function searchCaption(file){
 
     rl.on('close', () => {
         function compareFigtoObjF(subj){
-            return compareFigs(objectFig, subj)
+            return compareFigsCaption(objectFig, subj)
         }
-        console.log(queue);
+        // console.log(objectFig);
+        // console.log(queue);
         let compareResults = queue.map(compareFigtoObjF)
         let subjectFigure = returnSubjFig(extractArray(compareResults, subjectFigureHolder))
         if(subjectFigure){
@@ -355,10 +389,10 @@ function searchCaption(file){
 
 
 function dataRender(files) {
+    console.log(objectFig);
     myEF.myEveryFiles(files, (file) => {
         return (!searchCaption(dirPath.concat(file)))
     })
-    console.log(objectFig);
 }
 
 ////// Check the directory(or file) is valid
@@ -411,7 +445,8 @@ button_find.addEventListener("click", function(event) {
         if(num.match(/\d+\.\d+/g)) {
             objectFig.number = fignumber[0]
             // searchFile()
-            searchFile(dataRender(data))
+            searchFile()
+            dataRender(data)
         } else{
             printFail("Wrong input format");
         }
