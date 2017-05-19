@@ -1,6 +1,9 @@
 const fs = require('fs');
 const readline = require('readline');
 const {ipcRenderer} = require('electron')
+const stream = require('stream');
+const EventEmitter = require('events');
+class MyEmitter extends EventEmitter {}
 
 // html element
 const img = document.getElementById("myImg")
@@ -28,6 +31,18 @@ function Figure(number, source , exist, caption){
     }
 };
 
+function NotifyArray(items, aEmitter){
+    this.content = items
+    this.length = this.content.length
+    this.map = function(func){
+        this.content.map(func)
+    }
+    this.push = function(item){
+        this.content.push(item)
+        aEmitter.emit('push')
+    }
+
+}
 // self define
 const myRl = require('./LIB/myReadLine')
 const myEF = require('./LIB/myEveryFiles.js')
@@ -124,20 +139,38 @@ document.addEventListener('drop', (evt) => {
 
 // Main searching Process
 
+function stringer(number){
+    let string = ""
+    for(var i = 0; i < number; i++){
+         string = string.concat("0")
+    }
+    return string
+}
+
 //// Search input fignumber in lof
 function searchFile() {
-    let CONTINUE = true
     if(fs.existsSync(lofpath)){
-        let reader = new myRl.FileLineReader(lofpath)
-        while(CONTINUE){
-            let input = reader.nextLine()
-            CONTINUE = reader.hasNextLine()
-            if(input.match("{".concat(objectFig.number, "}"))){
+        const rl = readline.createInterface({
+            input: fs.createReadStream(lofpath),
+        });
+        const myEmitter = new MyEmitter();
+        let captionArray = new NotifyArray([], myEmitter)
+        myEmitter.on('push', () => {
+            console.log(captionArray)
+        })
+        rl.on('line', (line) => {
+            if(line.includes("\\numberline ".concat("{", objectFig.number, "}"))){
                 objectFig.exist = true
-                let caption = input.match(/ignorespaces.*relax/g)[0]
-                objectFig.caption = caption.replace('ignorespaces ', '').replace('\\relax', '').replace(/\s/g, '').replace(/Fig.*\\hbox\{\}/g, '')
-                CONTINUE = false
+                let caption = line.match(/ignorespaces.*relax/g)[0]
+                let captionToWrite = (caption.replace('ignorespaces ', '').replace('\\relax', '').replace(/\s/g, '').replace(/Fig.*\\hbox\{\}/g, ''))
+                captionArray.push(captionToWrite)
             }
+        })
+
+        if(captionArray.length > 1){
+            console.error("ERROR: Repeated figure number appear in .lof file");
+        } else {
+            objectFig.caption = captionArray[0]
         }
         if(!objectFig.exist){
             objectFig.exist = false
@@ -277,11 +310,22 @@ function extractArray(bools, objects){
 }
 
 function searchCaption(file){
-    let queue = [];
+    // let buffer = stringer(100)      // If a line from the file has length > 100. Things get wrong (exceed length).
+    // let bufferv = []
+    // const Writable = require('stream').Writable
+    // const myWritable = new Writable({
+    //     write(buffer){},
+    //     writev(bufferv){}
+    // })
+    const myEmitter = new MyEmitter();
+    let queue = new NotifyArray([], myEmitter.on('event', () => {
+      console.log(queue)
+    }))
+
     const rl = readline.createInterface({
         input: fs.createReadStream(file),
+        // output: myWritable
     });
-    // number, source , exist, caption, clear
     let subjectFigureHolder = new Figure()
     rl.on('line', (line) => {
         if(line.match("\\includegraphics")){
@@ -295,15 +339,19 @@ function searchCaption(file){
         if(line.match("\caption") && (subjectFigureHolder.source)){
             subjectFigureHolder.caption = line.replace('\\caption\{', '').replace(/\}$/, '').replace(/\s/g, '').replace(/Fig\.\\ref\{.*\}/g, '')
             queue.push(copyFig(subjectFigureHolder))
+            // console.log(queue);
+            rl.write(subjectFigureHolder)
+            subjectFigureHolder.clear()
         }
     })
+
     const compareFigtoObjF = function(subj){
         return compareFigs(objectFig, subj)
     }
     let compareResults = queue.map(compareFigtoObjF)
     let subjectFigure = returnSubjFig(extractArray(compareResults, compareFigtoObjF))
     if(subjectFigure){
-        mergeFigs(objectFig, subjectFigure)
+        mergeFigs(subjectFigure, objectFig)
         return true
     } else {
         return false
@@ -313,7 +361,7 @@ function searchCaption(file){
 
 function dataRender(files) {
     myEF.myEveryFiles(files, (file) => {
-        return (!searchCaption(file))
+        return (!searchCaption(dirPath.concat(file)))
     })
 }
 
@@ -363,16 +411,16 @@ button_find.addEventListener("click", function(event) {
     if(!num){
         printFail("Empty figure name!");
     } else{
+        fignumber = num.match(/\d+\.\d+/g)
         if(num.match(/\d+\.\d+/g)) {
-            objectFig.number = num[0]
-            searchFile(dataRender(data))
+            objectFig.number = fignumber[0]
+            searchFile()
+            // searchFile(dataRender(data))
         } else{
             printFail("Wrong input format");
         }
     }
 }, false)
-// console.log(document.getElementById('imgsrc'));
-
 
 
 
