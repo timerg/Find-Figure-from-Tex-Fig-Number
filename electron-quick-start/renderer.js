@@ -59,35 +59,42 @@ ipcRenderer.on('main-render', () => {
             if (err) {
                 createLOFzone((p) => {
                     // doSomething(p)
+                    lofListeningBeSearch(p)
                 });
             } else {
-                emitter.emit('lof', lofPath);
+                lofListeningBeSearch(lofPath)
+                // emitter.emit('lof', lofPath);
                 // doSomething(lofPath)
             }
         })
     });
-})
+});
 
+function lofListeningBeSearch(lofPath) {
+    button_find.addEventListener("click", function(event) {
+        searchFile(lofPath)
+    });
+}
 
 // ipc Process
-ipcRenderer.on('main-render', (event, message) => {
-    if(message === 'ready'){
-        ipcRenderer.on('path', (event, path) => {
-            globalpathEmitter.emit('got path!!', path);
-
-            getData.value = path.concat("data/")
-            lofpath = path.concat("main.lof")
-            fs.stat(lofPath, (err, stats) => {
-                if (err) {
-                    createLOFzone()
-                }
-            })
-            let mEvent = document.createEvent('Event')
-            mEvent.initEvent('input')
-            getData.dispatchEvent(mEvent)
-        })
-    }
-})
+// ipcRenderer.on('main-render', (event, message) => {
+//     if(message === 'ready'){
+//         ipcRenderer.on('path', (event, path) => {
+//             globalpathEmitter.emit('got path!!', path);
+//
+//             getData.value = path.concat("data/")
+//             lofpath = path.concat("main.lof")
+//             fs.stat(lofPath, (err, stats) => {
+//                 if (err) {
+//                     createLOFzone()
+//                 }
+//             })
+//             let mEvent = document.createEvent('Event')
+//             mEvent.initEvent('input')
+//             getData.dispatchEvent(mEvent)
+//         })
+//     }
+// })
 
 
 
@@ -98,7 +105,9 @@ function handleDragOver(evt) {
   evt.preventDefault();
   evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
 }
-
+function modifyLOFzone(string){
+    document.getElementById('drop_zone').textContent = string
+}
 function checkLOF(lofPath) {
     fs.stat(lofPath, (err, stats) => {
         if(err)
@@ -107,7 +116,6 @@ function checkLOF(lofPath) {
             modifyLOFzone(`Your .lof is "${lofPath}"`);
     })
 }
-
 function createLOFzone(callback){
     let drop_zone = document.createElement("div")
     drop_zone.id = "drop_zone"
@@ -138,13 +146,6 @@ function createLOFzone(callback){
         checkLOF(path[0])
     })
 }
-
-
-
-function modifyLOFzone(string){
-    document.getElementById('drop_zone').textContent = string
-}
-
 document.addEventListener('dragover', (evt) => {
     evt.stopPropagation();
     evt.preventDefault();
@@ -157,45 +158,74 @@ document.addEventListener('drop', (evt) => {
 
 // Main searching Process
 
-function stringer(number){
-    let string = ""
-    for(var i = 0; i < number; i++){
-         string = string.concat("0")
-    }
-    return string
+function searchFile(lofPath) {
+    const rl = readline.createInterface({
+        input: fs.createReadStream(lofPath),
+    });
+
+    let captionArray = []
+    rl.on('line', (line) => {
+        // console.log(line);
+        if(line.includes(`\\numberline \{${getFignumber.value}\}`)){
+            let caption = line.match(/ignorespaces.*relax/g)[0]
+            let captionToWrite = (caption.replace('ignorespaces ', '').replace('\\relax', '').replace(/\s/g, '').replace(/Fig.*\\hbox\{\}/g, ''))
+            captionArray.push(captionToWrite)
+        }
+    })
+    rl.on('close', () => {
+        let l = captionArray.length
+        if(l > 1){
+            printFail("ERROR: Repeated figure number appear in .lof file");
+        } else if (l === 0){
+            printFail("No such figure exist or the .lof file is wrong!")
+        } else {
+            emitter.emit('fig caption get!!', captionArray[0]);
+        }
+    })
 }
+
+emitter.on('fig caption get!!', (cpation) => {
+    console.log(`find "${cpation}"`);
+})
+
+////// Process render
+getData.addEventListener('input', function() {
+    // console.log("input");
+    dirPath = getData.value
+    checkDir(dirPath)
+}, false);
 
 //// Search input fignumber in lof
-function searchFile() {
-    if(fs.existsSync(lofpath)){
-        const rl = readline.createInterface({
-            input: fs.createReadStream(lofpath),
-        });
-        let captionArray = []
-        rl.on('line', (line) => {
-            if(line.includes("\\numberline ".concat("{", objectFig.number, "}"))){
-                objectFig.exist = true
-                let caption = line.match(/ignorespaces.*relax/g)[0]
-                let captionToWrite = (caption.replace('ignorespaces ', '').replace('\\relax', '').replace(/\s/g, '').replace(/Fig.*\\hbox\{\}/g, ''))
-                captionArray.push(captionToWrite)
-            }
-        })
-        rl.on('close', () => {
-            if(captionArray.length > 1){
-                console.error("ERROR: Repeated figure number appear in .lof file");
-            } else {
-                objectFig.caption = captionArray[0]
-
-            }
-            if(objectFig.exist !== true){
-                objectFig.exist = false
-                printFail("No such figure exist or the .lof file is wrong!")
-            }
-        })
-    } else {
-        printFail(".lof file is not loaded!")
-    }
-}
+// function searchFile() {
+//     if(fs.existsSync(lofpath)){
+//         const rl = readline.createInterface({
+//             input: fs.createReadStream(lofpath),
+//         });
+//         let captionArray = []
+//         rl.on('line', (line) => {
+//             if(line.includes("\\numberline ".concat("{", objectFig.number, "}"))){
+//                 objectFig.exist = true
+//                 let caption = line.match(/ignorespaces.*relax/g)[0]
+//                 let captionToWrite = (caption.replace('ignorespaces ', '').replace('\\relax', '').replace(/\s/g, '').replace(/Fig.*\\hbox\{\}/g, ''))
+//                 captionArray.push(captionToWrite)
+//             }
+//         })
+//         rl.on('close', () => {
+//             if(captionArray.length > 1){
+//                 console.error("ERROR: Repeated figure number appear in .lof file");
+//             } else {
+//                 objectFig.caption = captionArray[0]
+//
+//             }
+//             if(objectFig.exist !== true){
+//                 objectFig.exist = false
+//                 printFail("No such figure exist or the .lof file is wrong!")
+//             }
+//         })
+//     } else {
+//         printFail(".lof file is not loaded!")
+//     }
+// }
 
 
 //// Match figure cation and send output
@@ -410,34 +440,28 @@ function checkDir(path){
     })
 }
 
-////// Process render
-getData.addEventListener('input', function() {
-    // console.log("input");
-    dirPath = getData.value
-    checkDir(dirPath)
-}, false);
 
-button_find.addEventListener("click", function(event) {
-    removeYesNo()
-    objectFig.clear()
-    resultClear()
-    let num = getFignumber.value
-    // Check input fig number format
-    if(!num){
-        printFail("Empty figure name!");
-    } else{
-        fignumber = num.match(/\d+\.\d+/g)
-        if(num.match(/\d+\.\d+/g)) {
-            objectFig.number = fignumber[0]
-            // searchFile()
-            searchFile()
-            dataRender(data)
-        } else{
-            printFail("Wrong input format");
-        }
-    }
-}, false)
+
+// button_find.addEventListener("click", function(event) {
+//     removeYesNo()
+//     objectFig.clear()
+//     resultClear()
+//     let num = getFignumber.value
+//     // Check input fig number format
+//     if(!num){
+//         printFail("Empty figure name!");
+//     } else{
+//         fignumber = num.match(/\d+\.\d+/g)
+//         if(num.match(/\d+\.\d+/g)) {
+//             objectFig.number = fignumber[0]
+//             // searchFile()
+//             searchFile()
+//             dataRender(data)
+//         } else{
+//             printFail("Wrong input format");
+//         }
+//     }
+// }, false)
 
 
 
-// About array: stack, queue
