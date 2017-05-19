@@ -52,6 +52,7 @@ let objectFig = new Figure()
 
 
 // ipc Process
+// PreProcess: load .lof file
 ipcRenderer.on('main-render', () => {
     ipcRenderer.on('cwd', (event, cwd) => {
         const lofPath = path.join(cwd, "main.lof");
@@ -73,13 +74,15 @@ ipcRenderer.on('main-render', () => {
     });
 });
 
-function lofListeningBeSearch(lofPath) {
-    button_find.addEventListener("click", function(event) {
-        searchFile(lofPath)
-    });
-}
-
-// Drop and select lof
+//// Drop and select lof
+document.addEventListener('dragover', (evt) => {
+    evt.stopPropagation();
+    evt.preventDefault();
+}, false)
+document.addEventListener('drop', (evt) => {
+    evt.stopPropagation();
+    evt.preventDefault();
+}, false)
 function handleDragOver(evt) {
   evt.stopPropagation();
   evt.preventDefault();
@@ -126,17 +129,14 @@ function createLOFzone(callback){
         checkLOF(path[0])
     })
 }
-document.addEventListener('dragover', (evt) => {
-    evt.stopPropagation();
-    evt.preventDefault();
-}, false)
-document.addEventListener('drop', (evt) => {
-    evt.stopPropagation();
-    evt.preventDefault();
-}, false)
 
+function lofListeningBeSearch(lofPath) {
+    button_find.addEventListener("click", function(event) {
+        searchFile(lofPath)
+    });
+}
 
-// Main searching Process
+// PreProcess: DataPath and caption find
 
 function searchFile(lofPath) {
     const rl = readline.createInterface({
@@ -163,42 +163,27 @@ function searchFile(lofPath) {
     })
 }
 
-emitter.on('fig caption get!!', (cpation) => {
-    console.log(`find "${cpation}"`);
-})
-
 
  // Check validation of data
 function checkDataPath (path){
     fs.stat(path, (err, stats) => {
         if(err){
             dirValid.textContent = "Invalid"
+        } else {
+            if(stats.isFile()){
+                dirValid.textContent = "Valid (directory)"
+            } else if(stats.isDirectory()) {
+                if(path.includes(".tex")){
+                    dirValid.textContent = "Valid (Not a .tex file)"
+                } else {
+                    dirValid.textContent = "Valid (file)"
+                }
+            }
+            emitter.emit('DataPath get!!', path)
         }
     })
-    // fs.readdir(path, (err, files) => {
-        // if(err !== null){
-        //     if(!fs.existsSync(path)){
-        //     } else {
-        //         // path is a file
-        //         if(!path.content.includes(".tex")){
-        //             dirValid.textContent = "Valid (Not a .tex file)"
-        //         } else {
-        //             dirValid.textContent = "Valid (file)"
-        //         }
-        //         data = [path]
-        //     }
-        // }
-        // else{
-        //     if(path.charAt(path.length - 1) !== "/"){
-        //         dirValid.textContent = "Invalid (maybe need a '/')"
-        //         path = null
-        //     } else{
-        //         dirValid.textContent = "Valid (directory)"
-        //         data = files
-        //     }
-        // }
-    // })
 }
+
 
 emitter.on('Default Data Path loaded', function(path){
     checkDataPath(path)
@@ -207,43 +192,19 @@ emitter.on('Default Data Path loaded', function(path){
 getData.addEventListener('input', function() {
     // console.log("input");
     dirPath = getData.value
-    checkDataPath(dirPath)
+    checkDataPath(dirPath)      // emit 'DataPath get!!'
 }, false);
 
+emitter.on('DataPath get!!', (files) => {
+    emitter.on('fig caption get!!', (cpation) => {
+
+    })
+})
 
 
 
 //// Search input fignumber in lof
-// function searchFile() {
-//     if(fs.existsSync(lofpath)){
-//         const rl = readline.createInterface({
-//             input: fs.createReadStream(lofpath),
-//         });
-//         let captionArray = []
-//         rl.on('line', (line) => {
-//             if(line.includes("\\numberline ".concat("{", objectFig.number, "}"))){
-//                 objectFig.exist = true
-//                 let caption = line.match(/ignorespaces.*relax/g)[0]
-//                 let captionToWrite = (caption.replace('ignorespaces ', '').replace('\\relax', '').replace(/\s/g, '').replace(/Fig.*\\hbox\{\}/g, ''))
-//                 captionArray.push(captionToWrite)
-//             }
-//         })
-//         rl.on('close', () => {
-//             if(captionArray.length > 1){
-//                 console.error("ERROR: Repeated figure number appear in .lof file");
-//             } else {
-//                 objectFig.caption = captionArray[0]
-//
-//             }
-//             if(objectFig.exist !== true){
-//                 objectFig.exist = false
-//                 printFail("No such figure exist or the .lof file is wrong!")
-//             }
-//         })
-//     } else {
-//         printFail(".lof file is not loaded!")
-//     }
-// }
+
 
 
 //// Match figure cation and send output
