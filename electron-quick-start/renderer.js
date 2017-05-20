@@ -304,18 +304,6 @@ function dataRender(files, caption){
     }
 }
 
-// emitter('Figure found!'): Done, should stop all search
-// dataEmitter('Figure found!'): Found a match figure
-
-
-// function processPlMatches(queue){
-//     printResult(queue.shift())
-//     if (queue.length !== 0){
-//         createYesNo(queue)
-//             // processPlMatches(queue)
-//     }
-//     dataEmitter.emit('')
-// }
 
 function searchCaption(line, targetCaption){
     if(line.match(/\\includegraphics/g)){
@@ -387,44 +375,4 @@ function removeYesNo(){
     }
 }
 
-
-function compareFigsCaption(figA, figB){
-    // console.log(figA.caption);
-    // console.log(figB.caption);
-    if (figA.caption === figB.caption
-    ){
-        console.log("[compareFigs]: fig match");
-        return true
-    } else{
-        console.log("[compareFigs]: fig not match");
-        return false
-    }
-}
-
-function mergeFigs(figB, figA){
-    // figA has higher priority
-    return Object.assign({}, figB, figA)
-}
-
-function copyFig(fig){
-    return Object.assign({}, fig)
-}
-
-function extractArray(bools, objects){
-    let l = bools.length
-    let output = []
-    for(var i = 0; i < l; i++){
-        if(bools[i]){
-            output.push(Object.assign({}, objects[i]))
-        }
-    }
-    return output
-}
-
-
-let count = 0
-emitter.on('newListener', () => {
-    count = count + 1
-    console.log(count)
-})
 
