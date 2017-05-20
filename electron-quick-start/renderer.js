@@ -35,10 +35,10 @@ function Figure(number, source , exist, caption){
 
 // Event Emitter
 const emitter = new EventEmitter();
-const loffileEmitter = new MyEmitter();
+// const loffileEmitter = new MyEmitter();
 const dataEmitter = new MyEmitter();
-const figureEmitter = new MyEmitter();
-const globalpathEmitter = new MyEmitter();
+// const figureEmitter = new MyEmitter();
+// const globalpathEmitter = new MyEmitter();
 
 // self define
 const myRl = require('./LIB/myReadLine')
@@ -197,14 +197,94 @@ getData.addEventListener('input', function() {
 
 emitter.on('DataPath get!!', (files) => {
     emitter.on('fig caption get!!', (cpation) => {
-        console.log(cpation);
+        dataRender(files, caption)
     })
 })
 
 
+// Searching figure
+function dataRender(files) {
+    console.log(objectFig);
+    myEF.myEveryFiles(files, (file) => {
+        return (!searchCaption(dirPath.concat(file)))
+    })
+}
 
-//// Search input fignumber in lof
+function dataRender(files, caption){
+    myEF.myEveryFiles(files, (file) => {
+        const rl = readline.createInterface({
+            input: fs.createReadStream(file),
+        });
+        let queue = []
+        let source_temp
+    // Assume \caption always come after \includegraphics or \input
+            // rl emit 'Meet a Figure' when meet a "\includegraphics" or "\input".
+                // Save its source to source_temp (it replace the content in source_temp)
+        // To prevent a non-figure \caption match target
+            // rl emit 'Figure not match!!' when \caption doesn't match target
+                // Remove source_temp
+            // rl emit 'Match Figure get!!' when a \caption matches target
+                // copy and push source_temp to queue
+    //
+        dataEmitter.on('Meet a Figure', (source) => {
+            source_temp = source
+        })
+        dataEmitter.on('Figure not match!!', () => {
+            source_temp = null
+        })
+        dataEmitter.on('Match Figure get!!', () => {
+            queue.push(source_temp.repeat(1))
 
+        })
+
+        rl.on('line', (line) => {
+            searchCaption(line, caption)
+
+        })
+        rl.on('close', () => {
+
+        })
+    })
+}
+
+
+
+function searchCaption(line, targetCaption){
+        if(line.match(/\\includegraphics/g)){
+            let source = line.match(/\{.*\}/)[0]
+            dataEmitter.emit('Meet a Figure', source)
+        }
+        if(line.match(/\\input/g)){
+            subjectFigureHolder.source = line.match(/\{.*\}/)[0]
+            dataEmitter.emit('Meet a Figure', source)
+        }
+        if(line.match("\caption")){
+            caption = line.replace('\\caption\{', '').replace(/\}$/, '').replace(/\s/g, '').replace(/Fig\.\\ref\{.*\}/g, '')
+            if(caption === targetCaption){
+                dataEmitter.emit('Match Figure get!!')
+            } else {
+                dataEmitter.emit('Figure not match!!')
+            }
+        }
+    })
+
+    // rl.on('close', () => {
+    //     function compareFigtoObjF(subj){
+    //         return compareFigsCaption(objectFig, subj)
+    //     }
+    //     // console.log(objectFig);
+    //     // console.log(queue);
+    //     let compareResults = queue.map(compareFigtoObjF)
+    //     let subjectFigure = returnSubjFig(extractArray(compareResults, subjectFigureHolder))
+    //     if(subjectFigure){
+    //         objectFig = mergeFigs(subjectFigure, objectFig)
+    //
+    //         return true
+    //     } else {
+    //         return false
+    //     }
+    // })
+}
 
 
 //// Match figure cation and send output
@@ -250,41 +330,6 @@ function removeYesNo(){
     }
 }
 
-
-////// use caption to search
-// function checkFunc_loop(reader){
-//     let CONTINUE = true
-//     let source_temp
-//     while(CONTINUE){
-//         let input = reader.nextLine()
-//         CONTINUE = reader.hasNextLine()
-//         if(input.match("\\includegraphics")){
-//             source_temp = input.match(/\{.*\}/)
-//         }
-//         if(input.match("\caption")){
-//             let caption_temp = input.replace('\\caption\{', '').replace(/\}$/, '').replace(/\s/g, '').replace(/Fig\.\\ref\{.*\}/g, '')
-//             // Some figure don't have caption
-//             if(caption_temp){
-//                 if(figure.caption !== null && figure.caption.includes(caption_temp)){
-//                     figure.source = source_temp[0]
-//                     printResult()
-//                     CONTINUE = false
-//                 }
-//             } else {
-//                 if(!figure.caption){
-//                     img.src = "../".concat(source_temp[0].replace('{', '').replace('}', ''));
-//                     figure.source = source_temp[0]
-//                     printResult()
-//                     CONTINUE = false
-//                 }
-//             }
-//
-//         }
-//
-//     }
-// }
-
-
 function checkFunc(fig) {
     // createYesNo()
     // document.getElementById('yes').addEventListener('click', () => {
@@ -297,13 +342,13 @@ function checkFunc(fig) {
 }
 
 function returnSubjFig(figs){
-    if(figs.length === 1){
-        console.log("only one matching figs");
-        return figs[0]
-    } else {
-        // console.log("Multiple matching figs");
-        myEF.myEveryFiles(figs, checkFunc)
-    }
+    // if(figs.length === 1){
+    //     console.log("only one matching figs");
+    //     return figs[0]
+    // } else {
+    //     // console.log("Multiple matching figs");
+    //     myEF.myEveryFiles(figs, checkFunc)
+    // }
 }
 
 function compareFigsCaption(figA, figB){
@@ -339,55 +384,55 @@ function extractArray(bools, objects){
     return output
 }
 
-function searchCaption(file){
-    let queue = []
-    const rl = readline.createInterface({
-        input: fs.createReadStream(file),
-        // output: myWritable
-    });
-    let subjectFigureHolder = new Figure()
-    rl.on('line', (line) => {
-        if(line.match(/\\includegraphics/g)){
-            subjectFigureHolder.exist = true
-            subjectFigureHolder.source = line.match(/\{.*\}/)[0]
-        }
-        if(line.match(/\\input/g)){
-            subjectFigureHolder.exist = true
-            subjectFigureHolder.source = line.match(/\{.*\}/)[0]
-        }
-        if(line.match("\caption") && (subjectFigureHolder.source)){
-            subjectFigureHolder.caption = line.replace('\\caption\{', '').replace(/\}$/, '').replace(/\s/g, '').replace(/Fig\.\\ref\{.*\}/g, '')
-            queue.push(copyFig(subjectFigureHolder))
-            // console.log(queue);
-            subjectFigureHolder.clear()
-        }
-    })
+// function searchCaption(file){
+//     let queue = []
+//     const rl = readline.createInterface({
+//         input: fs.createReadStream(file),
+//         // output: myWritable
+//     });
+//     let subjectFigureHolder = new Figure()
+//     rl.on('line', (line) => {
+//         if(line.match(/\\includegraphics/g)){
+//             subjectFigureHolder.exist = true
+//             subjectFigureHolder.source = line.match(/\{.*\}/)[0]
+//         }
+//         if(line.match(/\\input/g)){
+//             subjectFigureHolder.exist = true
+//             subjectFigureHolder.source = line.match(/\{.*\}/)[0]
+//         }
+//         if(line.match("\caption") && (subjectFigureHolder.source)){
+//             subjectFigureHolder.caption = line.replace('\\caption\{', '').replace(/\}$/, '').replace(/\s/g, '').replace(/Fig\.\\ref\{.*\}/g, '')
+//             queue.push(copyFig(subjectFigureHolder))
+//             // console.log(queue);
+//             subjectFigureHolder.clear()
+//         }
+//     })
+//
+//     rl.on('close', () => {
+//         function compareFigtoObjF(subj){
+//             return compareFigsCaption(objectFig, subj)
+//         }
+//         // console.log(objectFig);
+//         // console.log(queue);
+//         let compareResults = queue.map(compareFigtoObjF)
+//         let subjectFigure = returnSubjFig(extractArray(compareResults, subjectFigureHolder))
+//         if(subjectFigure){
+//             objectFig = mergeFigs(subjectFigure, objectFig)
+//
+//             return true
+//         } else {
+//             return false
+//         }
+//     })
+// }
 
-    rl.on('close', () => {
-        function compareFigtoObjF(subj){
-            return compareFigsCaption(objectFig, subj)
-        }
-        // console.log(objectFig);
-        // console.log(queue);
-        let compareResults = queue.map(compareFigtoObjF)
-        let subjectFigure = returnSubjFig(extractArray(compareResults, subjectFigureHolder))
-        if(subjectFigure){
-            objectFig = mergeFigs(subjectFigure, objectFig)
 
-            return true
-        } else {
-            return false
-        }
-    })
-}
-
-
-function dataRender(files) {
-    console.log(objectFig);
-    myEF.myEveryFiles(files, (file) => {
-        return (!searchCaption(dirPath.concat(file)))
-    })
-}
+// function dataRender(files) {
+//     console.log(objectFig);
+//     myEF.myEveryFiles(files, (file) => {
+//         return (!searchCaption(dirPath.concat(file)))
+//     })
+// }
 
 ////// Check the directory(or file) is valid
 
