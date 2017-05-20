@@ -202,27 +202,44 @@ getData.addEventListener('input', function() {
 }, false);
 
 
+queueEmitter.on('shift', (queue) => {
+    if(queue.length = 0){
+        printFail("UNCAUGHT ERROR: no such figure exists")
+        queueEmitter.emit("can't be shift: Empty!")
+        console.log("All possible figure filtered by usr)");
+    } else{
+        printResult(queue[0])
+        dataEmitter.emit('check figure')
+        // The #YesNoListener is the '#ElementsInQueue - 1', so if shift cause no more element left in queue, no check will be triggered
+        queue.shift()
+    }
+    queueEmitter.emit('finishShift', queue)
+})
+
+
+queueEmitter.on('push!', (queue) => {
+    if(queue.length === 1){
+        // queueEmitter.on('single')
+    } else if(queue.length > 1){
+        dataEmitter.on('check figure', createYesNo)
+    }
+    queueEmitter.emit('finishPush', queue)
+})
 
 emitter.on('DataPath get!!', (files) => {               // ('Default Data Path loaded' | 'input') => checkDataPath => this
     emitter.on('fig caption get!!', (caption) => {      // lofListeningBeSearch('click') => searchFile => this('fig caption get!!')
-        // dataEmitter.on('Figure not found', () => {
-        dataEmitter.on('Search them', (files, caption) => {
-            console.log(files);
-                // if(files.length !== 0){
-            dataRender(files, caption)
-                // } else {
-                    // When 'Search them' is emit but no more file can be searched.
-                    // emitter.emit('End of search')
-                // }
+        // Open queue
+        let queue = []
+        dataEmitter.on('Search them', (files, caption, queue) => {
+            dataRender(files, caption, queue)
         })
-        // // Initiation
-        // dataEmitter.emit('Figure not found')
+
         emitter.on('Figure not found', () => {
             printFail("Can't find the figure in data! Data may not match with .lof file")
         })
         emitter.on('Figure found!', () => {})
-        dataEmitter.emit('Search them', files, caption)
-
+        // Initiation
+        dataEmitter.emit('Search them', files, caption, queue)
     })
 })
 
@@ -231,34 +248,17 @@ emitter.on('DataPath get!!', (files) => {               // ('Default Data Path l
 // emit 'Search them' to perform next file search
 // emit 'Figure found!' to stop search and say search success
 // emit 'Figure not found' to stop search and say search fail
-function dataRender(files, caption){
+function dataRender(files, caption, queue){
     if(files.length === 0){
         emitter.emit('Figure not found')
     } else {
         let file = files.shift()
-        const searchNextFile = () =>  {dataEmitter.emit('Search them', files, caption)}
+        const searchNextFile = () =>  {dataEmitter.emit('Search them', files, caption, queue)}
         console.log(file);
         const rl = readline.createInterface({
             input: fs.createReadStream(file),
         });
-        let queue = []
-        queueEmitter.on('shift', () => {
-            if(queue.length = 0){
-                queueEmitter.emit("can't be shift: Empty!")
-            } else{
-                printResult(queue[0])
-                dataEmitter.emit('check figure')
-                // The #YesNoListener is the '#ElementsInQueue - 1', so if shift cause no more element left in queue, no check will be triggered
-                queue.shift()
-            }
-        })
-        queueEmitter.on('push!', (queue) => {
-            if(queue.length === 1){
-                // queueEmitter.on('single')
-            } else if(queue.length > 1){
-                dataEmitter.on('check figure', createYesNo)
-            }
-        })
+
         rl.on('close', searchNextFile)      // if nothing below happens and file reach end, move to next file
                                                 // will be remove when 'Match Figure get!!'
         let source_temp
@@ -281,7 +281,11 @@ function dataRender(files, caption){
             rl.removeListener('close', searchNextFile)
             queue.push(source_temp.repeat(1))
             printResult(queue[0])
+            createYesNo()
             queueEmitter.emit('push!', queue)
+            queueEmitter.on('finishPush', (q) => {
+                queue = q
+            })
         })
 
         rl.on('line', (line) => {
@@ -293,13 +297,13 @@ function dataRender(files, caption){
         emitter.on('Figure found!', rl.close)
 
         const waitForSearch = () => {printFail("Wait for search")}
+        const figNotFound = () => {emitter.emit('Figure not found')}
+        queueEmitter.removeListener("can't be shift: Empty!", figNotFound)
         queueEmitter.on("can't be shift: Empty!", waitForSearch)       // Prevent usr click 'no' before search end
         rl.on('close', () => {
+            queueEmitter.on("can't be shift: Empty!", figNotFound)
             queueEmitter.removeListener("can't be shift: Empty!", waitForSearch)
-            queueEmitter.on("can't be shift: Empty!", () => {
-                printFail("")
-                searchNextFile
-            })
+            searchNextFile
         })
     }
 }
@@ -352,20 +356,25 @@ function resultClear(){
 
 ////// create decsion block for figure with no caption
 function createYesNo(){
-    var yesDiv = document.createElement('div')
-    yesDiv.id =  'yes'
-    yesDiv.textContent = "Right figure?"
-    var noDiv = document.createElement('div')
-    noDiv.id =  'no'
-    noDiv.textContent = ("Wrong figure?")
-    yesnoBlock.appendChild(yesDiv)
-    yesnoBlock.appendChild(noDiv)
-    yesDiv.addEventListener('click', () => {
-        dataEmitter.emit('Figure found!')
-    })
-    noDiv.addEventListener('click', () => {
-        queueEmitter.emit('shift')
-    })
+    if(!yesnoBlock.hasChildNodes()){
+        var yesDiv = document.createElement('div')
+        yesDiv.id =  'yes'
+        yesDiv.textContent = "Right figure?"
+        var noDiv = document.createElement('div')
+        noDiv.id =  'no'
+        noDiv.textContent = ("Wrong figure?")
+        yesnoBlock.appendChild(yesDiv)
+        yesnoBlock.appendChild(noDiv)
+        yesDiv.addEventListener('click', () => {
+            dataEmitter.emit('Figure found!')
+        })
+        noDiv.addEventListener('click', () => {
+            queueEmitter.emit('shift', queue, func)
+            queueEmitter.on('finishShift', (q) => {
+                queue = q
+            })
+        })
+    }
 }
 
 function removeYesNo(){
