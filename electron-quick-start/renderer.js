@@ -172,19 +172,23 @@ function searchFile(lofPath) {
  // Check validation of data
 function checkDataPath (path){
     fs.stat(path, (err, stats) => {
+        let files
         if(err){
             dirValid.textContent = "Invalid"
         } else {
             if(stats.isDirectory()){
                 dirValid.textContent = "Valid (directory)"
+                fs.readdir(path, (err, files) => {
+                    emitter.emit('DataPath get!!', files)
+                })
             } else if(stats.isFile()) {
                 if(path.includes(".tex")){
                     dirValid.textContent = "Valid (Not a .tex file)"
                 } else {
                     dirValid.textContent = "Valid (file)"
                 }
+                emitter.emit('DataPath get!!', [file])
             }
-            emitter.emit('DataPath get!!', path)
         }
     })
 }
@@ -200,64 +204,65 @@ getData.addEventListener('input', function() {
     checkDataPath(dirPath)      // emit 'DataPath get!!'
 }, false);
 
-emitter.on('DataPath get!!', (files) => {
-    emitter.on('fig caption get!!', (caption) => {
-        dataRender(files, caption)
+emitter.on('DataPath get!!', (files) => {               // ('Default Data Path loaded' | 'input') => checkDataPath => this
+    emitter.on('fig caption get!!', (caption) => {      // lofListeningBeSearch('click') => searchFile => this('fig caption get!!')
+        dataEmitter.on('Search them', (files) => {
+            if(files.length !== 0){
+                dataRender(files, caption)
+            } else {
+                // When 'Search them' is emit but no more file can be searched.
+                emitter.emit('End of search')
+                printFail("Can't find the figure in data! Data may not match with .lof file")
+            }
+        })
+        dataEmitter.emit('Search them', files)
     })
 })
 
 
 // Searching figure
-function dataRender(files) {
-    console.log(objectFig);
-    myEF.myEveryFiles(files, (file) => {
-        return (!searchCaption(dirPath.concat(file)))
-    })
-}
-
 function dataRender(files, caption){
-    myEF.myEveryFiles(files, (file) => {
-        const rl = readline.createInterface({
-            input: fs.createReadStream(file),
-        });
-        let queue = []
-        queueEmitter.on('shift', () => {
-            printResult(queue[0])
-            queue.shift()
-        })
-        let source_temp
-    // Assume \caption always come after \includegraphics or \input
-            // rl emit 'Meet a Figure' when meet a "\includegraphics" or "\input".
-                // Save its source to source_temp (it replace the content in source_temp)
-        // To prevent a non-figure \caption match target
-            // rl emit 'Figure not match!!' when \caption doesn't match target
-                // Remove source_temp
-            // rl emit 'Match Figure get!!' when a \caption matches target
-                // copy and push source_temp to queue
-    //
-        dataEmitter.on('Meet a Figure', (source) => {
-            source_temp = source
-        })
-        dataEmitter.on('Figure not match!!', () => {
-            source_temp = null
-        })
-        dataEmitter.on('Match Figure get!!', () => {
-            queue.push(source_temp.repeat(1))
-            printResult(queue[0])
-            queueEmitter.emit('push!', queue)
-        })
+    let file = files.shift()
+    console.log(file);
+    const rl = readline.createInterface({
+        input: fs.createReadStream(file),
+    });
+    let queue = []
+    queueEmitter.on('shift', () => {
+        printResult(queue[0])
+        queue.shift()
+    })
+    let source_temp
+// Assume \caption always come after \includegraphics or \input
+        // rl emit 'Meet a Figure' when meet a "\includegraphics" or "\input".
+            // Save its source to source_temp (it replace the content in source_temp)
+    // To prevent a non-figure \caption match target
+        // rl emit 'Figure not match!!' when \caption doesn't match target
+            // Remove source_temp
+        // rl emit 'Match Figure get!!' when a \caption matches target
+            // copy and push source_temp to queue
+//
+    dataEmitter.on('Meet a Figure', (source) => {
+        source_temp = source
+    })
+    dataEmitter.on('Figure not match!!', () => {
+        source_temp = null
+    })
+    dataEmitter.on('Match Figure get!!', () => {
+        queue.push(source_temp.repeat(1))
+        printResult(queue[0])
+        queueEmitter.emit('push!', queue)
+    })
 
-        rl.on('line', (line) => {
-            searchCaption(line, caption)
-        })
+    rl.on('line', (line) => {
+        searchCaption(line, caption)
+    })
 
-        rl.on('close', () => {
-            dataEmitter.on('Figure found', () => {
-                return false
-            })
-            dataEmitter.on('Figure not found', () => {
-                return true
-            })
+    rl.on('close', () => {
+        dataEmitter.on('Figure found!', () => {
+        })
+        dataEmitter.on('Figure not found', () => {
+            dataEmitter.emit('Search them', files)
         })
     })
 }

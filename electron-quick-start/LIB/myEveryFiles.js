@@ -1,15 +1,15 @@
 
 
 
-function myEveryFiles(files, usrFunc){
+function myEvery(files, usrFunc){
     // console.log(files);
     let l = files.length
     if(usrFunc(files[0]) && (files[1]) ){
-        myEveryFiles(files.slice(1, l), usrFunc)
+        myEvery(files.slice(1, l), usrFunc)
     }
 }
 
-exports.myEveryFiles = myEveryFiles
+exports.myEvery = myEvery
 
 
 
