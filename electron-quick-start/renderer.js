@@ -134,15 +134,13 @@ function createLOFzone(callback){
         checkLOF(path[0])
     })
 }
-
 function lofListeningBeSearch(lofPath) {
     button_find.addEventListener("click", function(event) {
         searchFile(lofPath)
     });
 }
 
-// PreProcess: DataPath and caption find
-
+// PreProcess: DataPath and caption finding
 function searchFile(lofPath) {
     const rl = readline.createInterface({
         input: fs.createReadStream(lofPath),
@@ -167,22 +165,24 @@ function searchFile(lofPath) {
         }
     })
 }
-
-
  // Check validation of data
-function checkDataPath (path){
-    fs.stat(path, (err, stats) => {
+ // emit 'DataPath get!!' if success
+function checkDataPath (dataPath){
+    fs.stat(dataPath, (err, stats) => {
         let files
         if(err){
             dirValid.textContent = "Invalid"
         } else {
             if(stats.isDirectory()){
                 dirValid.textContent = "Valid (directory)"
-                fs.readdir(path, (err, files) => {
-                    emitter.emit('DataPath get!!', files)
+                fs.readdir(dataPath, (err, files) => {
+                    function joinDataPath(file){
+                        return path.join(dataPath, file)
+                    }
+                    emitter.emit('DataPath get!!', files.map(joinDataPath))
                 })
             } else if(stats.isFile()) {
-                if(path.includes(".tex")){
+                if(dataPath.includes(".tex")){
                     dirValid.textContent = "Valid (Not a .tex file)"
                 } else {
                     dirValid.textContent = "Valid (file)"
@@ -192,86 +192,122 @@ function checkDataPath (path){
         }
     })
 }
-
-
 emitter.on('Default Data Path loaded', function(path){
     checkDataPath(path)
 })
-
 getData.addEventListener('input', function() {
     // console.log("input");
     dirPath = getData.value
     checkDataPath(dirPath)      // emit 'DataPath get!!'
 }, false);
 
+
+
 emitter.on('DataPath get!!', (files) => {               // ('Default Data Path loaded' | 'input') => checkDataPath => this
     emitter.on('fig caption get!!', (caption) => {      // lofListeningBeSearch('click') => searchFile => this('fig caption get!!')
-        dataEmitter.on('Search them', (files) => {
-            if(files.length !== 0){
-                dataRender(files, caption)
-            } else {
-                // When 'Search them' is emit but no more file can be searched.
-                emitter.emit('End of search')
-                printFail("Can't find the figure in data! Data may not match with .lof file")
-            }
+        // dataEmitter.on('Figure not found', () => {
+        dataEmitter.on('Search them', (files, caption) => {
+            console.log(files);
+                // if(files.length !== 0){
+            dataRender(files, caption)
+                // } else {
+                    // When 'Search them' is emit but no more file can be searched.
+                    // emitter.emit('End of search')
+                // }
         })
-        dataEmitter.emit('Search them', files)
+        // // Initiation
+        // dataEmitter.emit('Figure not found')
+        emitter.on('Figure not found', () => {
+            printFail("Can't find the figure in data! Data may not match with .lof file")
+        })
+        emitter.on('Figure found!', () => {})
+        dataEmitter.emit('Search them', files, caption)
+
     })
 })
 
 
 // Searching figure
+// emit 'Search them' to perform next file search
+// emit 'Figure found!' to stop search and say search success
+// emit 'Figure not found' to stop search and say search fail
 function dataRender(files, caption){
-    let file = files.shift()
-    console.log(file);
-    const rl = readline.createInterface({
-        input: fs.createReadStream(file),
-    });
-    let queue = []
-    queueEmitter.on('shift', () => {
-        printResult(queue[0])
-        queue.shift()
-    })
-    let source_temp
-// Assume \caption always come after \includegraphics or \input
+    if(files.length === 0){
+        emitter.emit('Figure not found')
+    } else {
+        let file = files.shift()
+        const searchNextFile = () =>  {dataEmitter.emit('Search them', files, caption)}
+        console.log(file);
+        const rl = readline.createInterface({
+            input: fs.createReadStream(file),
+        });
+        let queue = []
+        queueEmitter.on('shift', () => {
+            if(queue.length = 0){
+                queueEmitter.emit("can't be shift: Empty!")
+            } else{
+                printResult(queue[0])
+                dataEmitter.emit('check figure')
+                // The #YesNoListener is the '#ElementsInQueue - 1', so if shift cause no more element left in queue, no check will be triggered
+                queue.shift()
+            }
+        })
+        queueEmitter.on('push!', (queue) => {
+            if(queue.length === 1){
+                // queueEmitter.on('single')
+            } else if(queue.length > 1){
+                dataEmitter.on('check figure', createYesNo)
+            }
+        })
+        rl.on('close', searchNextFile)      // if nothing below happens and file reach end, move to next file
+                                                // will be remove when 'Match Figure get!!'
+        let source_temp
+        // Assume \caption always come after \includegraphics or \input
         // rl emit 'Meet a Figure' when meet a "\includegraphics" or "\input".
-            // Save its source to source_temp (it replace the content in source_temp)
-    // To prevent a non-figure \caption match target
+        // Save its source to source_temp (it replace the content in source_temp)
+        // To prevent a non-figure \caption match target
         // rl emit 'Figure not match!!' when \caption doesn't match target
-            // Remove source_temp
+        // Remove source_temp
         // rl emit 'Match Figure get!!' when a \caption matches target
-            // copy and push source_temp to queue
-//
-    dataEmitter.on('Meet a Figure', (source) => {
-        source_temp = source
-    })
-    dataEmitter.on('Figure not match!!', () => {
-        source_temp = null
-    })
-    dataEmitter.on('Match Figure get!!', () => {
-        queue.push(source_temp.repeat(1))
-        printResult(queue[0])
-        queueEmitter.emit('push!', queue)
-    })
+        // copy and push source_temp to queue
+        //
+        dataEmitter.on('Meet a Figure', (source) => {
+            source_temp = source
+        })
+        dataEmitter.on('Figure not match!!', () => {
+            source_temp = null
+        })
+        dataEmitter.on('Match Figure get!!', () => {
+            rl.removeListener('close', searchNextFile)
+            queue.push(source_temp.repeat(1))
+            printResult(queue[0])
+            queueEmitter.emit('push!', queue)
+        })
 
-    rl.on('line', (line) => {
-        searchCaption(line, caption)
-    })
-
-    rl.on('close', () => {
+        rl.on('line', (line) => {
+            searchCaption(line, caption)
+        })
         dataEmitter.on('Figure found!', () => {
+            emitter.emit('Figure found!')
         })
-        dataEmitter.on('Figure not found', () => {
-            dataEmitter.emit('Search them', files)
+        emitter.on('Figure found!', rl.close)
+
+        const waitForSearch = () => {printFail("Wait for search")}
+        queueEmitter.on("can't be shift: Empty!", waitForSearch)       // Prevent usr click 'no' before search end
+        rl.on('close', () => {
+            queueEmitter.removeListener("can't be shift: Empty!", waitForSearch)
+            queueEmitter.on("can't be shift: Empty!", () => {
+                printFail("")
+                searchNextFile
+            })
         })
-    })
+    }
 }
 
-queueEmitter.on('push!', (queue) => {
-    if(queue.length > 1){
-        createYesNo()
-    }
-})
+// emitter('Figure found!'): Done, should stop all search
+// dataEmitter('Figure found!'): Found a match figure
+
+
 // function processPlMatches(queue){
 //     printResult(queue.shift())
 //     if (queue.length !== 0){
@@ -287,7 +323,7 @@ function searchCaption(line, targetCaption){
         dataEmitter.emit('Meet a Figure', source)
     }
     if(line.match(/\\input/g)){
-        subjectFigureHolder.source = line.match(/\{.*\}/)[0]
+        let source = line.match(/\{.*\}/)[0]
         dataEmitter.emit('Meet a Figure', source)
     }
     if(line.match("\caption")){
@@ -298,23 +334,6 @@ function searchCaption(line, targetCaption){
             dataEmitter.emit('Figure not match!!')
         }
     }
-
-    // rl.on('close', () => {
-    //     function compareFigtoObjF(subj){
-    //         return compareFigsCaption(objectFig, subj)
-    //     }
-    //     // console.log(objectFig);
-    //     // console.log(queue);
-    //     let compareResults = queue.map(compareFigtoObjF)
-    //     let subjectFigure = returnSubjFig(extractArray(compareResults, subjectFigureHolder))
-    //     if(subjectFigure){
-    //         objectFig = mergeFigs(subjectFigure, objectFig)
-    //
-    //         return true
-    //     } else {
-    //         return false
-    //     }
-    // })
 }
 
 
@@ -354,7 +373,7 @@ function createYesNo(){
     yesnoBlock.appendChild(yesDiv)
     yesnoBlock.appendChild(noDiv)
     yesDiv.addEventListener('click', () => {
-        dataEmitter.emit('Figure found')
+        dataEmitter.emit('Figure found!')
     })
     noDiv.addEventListener('click', () => {
         queueEmitter.emit('shift')
@@ -368,26 +387,6 @@ function removeYesNo(){
     }
 }
 
-function checkFunc(fig) {
-    // createYesNo()
-    // document.getElementById('yes').addEventListener('click', () => {
-    //     removeYesNo()
-    // })
-    // document.getElementById('no').addEventListener('click', () => {
-    //     objectFig.source = undefined
-    //     removeYesNo()
-    // })
-}
-
-function returnSubjFig(figs){
-    // if(figs.length === 1){
-    //     console.log("only one matching figs");
-    //     return figs[0]
-    // } else {
-    //     // console.log("Multiple matching figs");
-    //     myEF.myEveryFiles(figs, checkFunc)
-    // }
-}
 
 function compareFigsCaption(figA, figB){
     // console.log(figA.caption);
@@ -422,80 +421,10 @@ function extractArray(bools, objects){
     return output
 }
 
-// function searchCaption(file){
-//     let queue = []
-//     const rl = readline.createInterface({
-//         input: fs.createReadStream(file),
-//         // output: myWritable
-//     });
-//     let subjectFigureHolder = new Figure()
-//     rl.on('line', (line) => {
-//         if(line.match(/\\includegraphics/g)){
-//             subjectFigureHolder.exist = true
-//             subjectFigureHolder.source = line.match(/\{.*\}/)[0]
-//         }
-//         if(line.match(/\\input/g)){
-//             subjectFigureHolder.exist = true
-//             subjectFigureHolder.source = line.match(/\{.*\}/)[0]
-//         }
-//         if(line.match("\caption") && (subjectFigureHolder.source)){
-//             subjectFigureHolder.caption = line.replace('\\caption\{', '').replace(/\}$/, '').replace(/\s/g, '').replace(/Fig\.\\ref\{.*\}/g, '')
-//             queue.push(copyFig(subjectFigureHolder))
-//             // console.log(queue);
-//             subjectFigureHolder.clear()
-//         }
-//     })
-//
-//     rl.on('close', () => {
-//         function compareFigtoObjF(subj){
-//             return compareFigsCaption(objectFig, subj)
-//         }
-//         // console.log(objectFig);
-//         // console.log(queue);
-//         let compareResults = queue.map(compareFigtoObjF)
-//         let subjectFigure = returnSubjFig(extractArray(compareResults, subjectFigureHolder))
-//         if(subjectFigure){
-//             objectFig = mergeFigs(subjectFigure, objectFig)
-//
-//             return true
-//         } else {
-//             return false
-//         }
-//     })
-// }
 
-
-// function dataRender(files) {
-//     console.log(objectFig);
-//     myEF.myEveryFiles(files, (file) => {
-//         return (!searchCaption(dirPath.concat(file)))
-//     })
-// }
-
-////// Check the directory(or file) is valid
-
-
-
-// button_find.addEventListener("click", function(event) {
-//     removeYesNo()
-//     objectFig.clear()
-//     resultClear()
-//     let num = getFignumber.value
-//     // Check input fig number format
-//     if(!num){
-//         printFail("Empty figure name!");
-//     } else{
-//         fignumber = num.match(/\d+\.\d+/g)
-//         if(num.match(/\d+\.\d+/g)) {
-//             objectFig.number = fignumber[0]
-//             // searchFile()
-//             searchFile()
-//             dataRender(data)
-//         } else{
-//             printFail("Wrong input format");
-//         }
-//     }
-// }, false)
-
-
+let count = 0
+emitter.on('newListener', () => {
+    count = count + 1
+    console.log(count)
+})
 
