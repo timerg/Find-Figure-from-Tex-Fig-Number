@@ -202,8 +202,12 @@ getData.addEventListener('input', function() {
 }, false);
 
 
-queueEmitter.on('shift', (queue) => {
-    if(queue.length = 0){
+queueEmitter.on('shift', () => {
+    let queue
+    dataEmitter.emit('Ask for Queue', (q) => {
+        queue = q
+    })
+    if(queue.length === 0){
         printFail("UNCAUGHT ERROR: no such figure exists")
         queueEmitter.emit("can't be shift: Empty!")
         console.log("All possible figure filtered by usr)");
@@ -213,7 +217,7 @@ queueEmitter.on('shift', (queue) => {
         // The #YesNoListener is the '#ElementsInQueue - 1', so if shift cause no more element left in queue, no check will be triggered
         queue.shift()
     }
-    queueEmitter.emit('finishShift', queue)
+    dataEmitter.emit('Sned Queue back', queue)
 })
 
 
@@ -233,11 +237,16 @@ emitter.on('DataPath get!!', (files) => {               // ('Default Data Path l
         dataEmitter.on('Search them', (files, caption, queue) => {
             dataRender(files, caption, queue)
         })
-
+        dataEmitter.on('Ask for Queue', (send) => {
+            send(queue)
+        })
+        dataEmitter.on('Send Queue back', (NewQueue) => {
+            queue = NewQueue
+        })
         emitter.on('Figure not found', () => {
             printFail("Can't find the figure in data! Data may not match with .lof file")
         })
-        emitter.on('Figure found!', () => {})
+        emitter.on('Figure found!', removeYesNo)
         // Initiation
         dataEmitter.emit('Search them', files, caption, queue)
     })
@@ -261,7 +270,33 @@ function dataRender(files, caption, queue){
 
         rl.on('close', searchNextFile)      // if nothing below happens and file reach end, move to next file
                                                 // will be remove when 'Match Figure get!!'
-        let source_temp
+
+        const DoesFigMatch = (source, queue) => {
+            queueEmitter.emit('getQueue', (q) => {
+                queue = q
+            })
+            dataEmitter.on('Figure not match!!', () => {
+                dataEmitter.removeListener('Meet a Figure', DoesFigMatch)
+            })
+            dataEmitter.on('Match Figure get!!', () => {
+                rl.removeListener('close', searchNextFile)
+                queue.push(source.repeat(1))
+                printResult(queue[0])
+                createYesNo()
+                queueEmitter.emit('push!', queue)
+                queueEmitter.on('finishPush', (q) => {
+                    queue = q
+                })
+                dataEmitter.removeListener('Meet a Figure', DoesFigMatch)
+            })
+            queueEmitter.emit('returnQueue', queue)
+        }
+        queueEmitter.on('getQueue', (func) => {
+            func(queue)
+        })
+        queueEmitter.on('returnQueue', (q) => {
+            queue = q
+        })
         // Assume \caption always come after \includegraphics or \input
         // rl emit 'Meet a Figure' when meet a "\includegraphics" or "\input".
         // Save its source to source_temp (it replace the content in source_temp)
@@ -271,22 +306,7 @@ function dataRender(files, caption, queue){
         // rl emit 'Match Figure get!!' when a \caption matches target
         // copy and push source_temp to queue
         //
-        dataEmitter.on('Meet a Figure', (source) => {
-            source_temp = source
-        })
-        dataEmitter.on('Figure not match!!', () => {
-            source_temp = null
-        })
-        dataEmitter.on('Match Figure get!!', () => {
-            rl.removeListener('close', searchNextFile)
-            queue.push(source_temp.repeat(1))
-            printResult(queue[0])
-            createYesNo()
-            queueEmitter.emit('push!', queue)
-            queueEmitter.on('finishPush', (q) => {
-                queue = q
-            })
-        })
+        dataEmitter.on('Meet a Figure', DoesFigMatch)
 
         rl.on('line', (line) => {
             searchCaption(line, caption)
@@ -294,7 +314,7 @@ function dataRender(files, caption, queue){
         dataEmitter.on('Figure found!', () => {
             emitter.emit('Figure found!')
         })
-        emitter.on('Figure found!', rl.close)
+
 
         const waitForSearch = () => {printFail("Wait for search")}
         const figNotFound = () => {emitter.emit('Figure not found')}
@@ -369,10 +389,10 @@ function createYesNo(){
             dataEmitter.emit('Figure found!')
         })
         noDiv.addEventListener('click', () => {
-            queueEmitter.emit('shift', queue, func)
-            queueEmitter.on('finishShift', (q) => {
-                queue = q
-            })
+            queueEmitter.emit('shift')
+            // queueEmitter.on('finishShift', (q) => {
+            //     queue = q
+            // })
         })
     }
 }
