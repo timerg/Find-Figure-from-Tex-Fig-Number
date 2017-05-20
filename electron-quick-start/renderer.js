@@ -35,8 +35,8 @@ function Figure(number, source , exist, caption){
 
 // Event Emitter
 const emitter = new EventEmitter();
-// const loffileEmitter = new MyEmitter();
 const dataEmitter = new MyEmitter();
+const queueEmitter = new MyEmitter();
 // const figureEmitter = new MyEmitter();
 // const globalpathEmitter = new MyEmitter();
 
@@ -68,9 +68,14 @@ ipcRenderer.on('main-render', () => {
                 // doSomething(lofPath)
             }
         })
+        // DataPath
         const dataPath = path.join(cwd, "data")
         getData.value = dataPath
         emitter.emit('Default Data Path loaded', dataPath)
+        // Print img
+        emitter.on('need globalPath', (func) => {
+            func(cwd)
+        })
     });
 });
 
@@ -196,7 +201,7 @@ getData.addEventListener('input', function() {
 }, false);
 
 emitter.on('DataPath get!!', (files) => {
-    emitter.on('fig caption get!!', (cpation) => {
+    emitter.on('fig caption get!!', (caption) => {
         dataRender(files, caption)
     })
 })
@@ -216,6 +221,10 @@ function dataRender(files, caption){
             input: fs.createReadStream(file),
         });
         let queue = []
+        queueEmitter.on('shift', () => {
+            printResult(queue[0])
+            queue.shift()
+        })
         let source_temp
     // Assume \caption always come after \includegraphics or \input
             // rl emit 'Meet a Figure' when meet a "\includegraphics" or "\input".
@@ -234,39 +243,56 @@ function dataRender(files, caption){
         })
         dataEmitter.on('Match Figure get!!', () => {
             queue.push(source_temp.repeat(1))
-
+            printResult(queue[0])
+            queueEmitter.emit('push!', queue)
         })
 
         rl.on('line', (line) => {
             searchCaption(line, caption)
-
         })
-        rl.on('close', () => {
 
+        rl.on('close', () => {
+            dataEmitter.on('Figure found', () => {
+                return false
+            })
+            dataEmitter.on('Figure not found', () => {
+                return true
+            })
         })
     })
 }
 
-
+queueEmitter.on('push!', (queue) => {
+    if(queue.length > 1){
+        createYesNo()
+    }
+})
+// function processPlMatches(queue){
+//     printResult(queue.shift())
+//     if (queue.length !== 0){
+//         createYesNo(queue)
+//             // processPlMatches(queue)
+//     }
+//     dataEmitter.emit('')
+// }
 
 function searchCaption(line, targetCaption){
-        if(line.match(/\\includegraphics/g)){
-            let source = line.match(/\{.*\}/)[0]
-            dataEmitter.emit('Meet a Figure', source)
+    if(line.match(/\\includegraphics/g)){
+        let source = line.match(/\{.*\}/)[0]
+        dataEmitter.emit('Meet a Figure', source)
+    }
+    if(line.match(/\\input/g)){
+        subjectFigureHolder.source = line.match(/\{.*\}/)[0]
+        dataEmitter.emit('Meet a Figure', source)
+    }
+    if(line.match("\caption")){
+        caption = line.replace('\\caption\{', '').replace(/\}$/, '').replace(/\s/g, '').replace(/Fig\.\\ref\{.*\}/g, '')
+        if(caption === targetCaption){
+            dataEmitter.emit('Match Figure get!!')
+        } else {
+            dataEmitter.emit('Figure not match!!')
         }
-        if(line.match(/\\input/g)){
-            subjectFigureHolder.source = line.match(/\{.*\}/)[0]
-            dataEmitter.emit('Meet a Figure', source)
-        }
-        if(line.match("\caption")){
-            caption = line.replace('\\caption\{', '').replace(/\}$/, '').replace(/\s/g, '').replace(/Fig\.\\ref\{.*\}/g, '')
-            if(caption === targetCaption){
-                dataEmitter.emit('Match Figure get!!')
-            } else {
-                dataEmitter.emit('Figure not match!!')
-            }
-        }
-    })
+    }
 
     // rl.on('close', () => {
     //     function compareFigtoObjF(subj){
@@ -287,7 +313,6 @@ function searchCaption(line, targetCaption){
 }
 
 
-//// Match figure cation and send output
 ////// Print the search result in window
 function printFail(text){
     img.src = ''
@@ -295,17 +320,19 @@ function printFail(text){
     // console.log(imgsrc.style.marginLeft)
     imgsrc.textContent = text
 }
-function printResult(){
+function printResult(source){
     imgsrc.style.marginLeft = 332;
-    imgsrc.textContent = "This figure is at '".concat(objectFig.source.replace('\{', '').replace('\}', '')).replace(/\//g, ' / ').concat("'")
-    if(!objectFig.source.includes(".eps")){
-        globalpathEmitter.on('got path!!', (path) => {
-            img.src = path.concat(objectFig.source.replace('{', '').replace('}', ''))
-        });
+    source = source.replace('\{', '').replace('\}', '').replace(/\//g, ' / ')
+    imgsrc.textContent = `This figure is at "${source}".`
+    if(!source.includes(".eps")){
+        emitter.emit('need globalPath', (cwd) => {
+            img.src = path.join(cwd, source.replace('{', '').replace('}', ''))
+        })
     } else{
         img.src = "Img/EPSerror.jpeg"
     }
 }
+
 function resultClear(){
     imgsrc.textContent=''
     img.src=''
@@ -321,6 +348,12 @@ function createYesNo(){
     noDiv.textContent = ("Wrong figure?")
     yesnoBlock.appendChild(yesDiv)
     yesnoBlock.appendChild(noDiv)
+    yesDiv.addEventListener('click', () => {
+        dataEmitter.emit('Figure found')
+    })
+    noDiv.addEventListener('click', () => {
+        queueEmitter.emit('shift')
+    })
 }
 
 function removeYesNo(){
