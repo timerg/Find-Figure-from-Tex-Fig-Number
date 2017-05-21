@@ -211,6 +211,7 @@ emitter.on('DataPath get!!', (files) => {               // ('Default Data Path l
         const figNotFound = () => {
             resultClear()
             removeYesNo()
+            console.log('figure not found');
             printFail("UNCAUGHT ERROR: No such figure exists")
         }
         const figFound = () => {
@@ -224,11 +225,20 @@ emitter.on('DataPath get!!', (files) => {               // ('Default Data Path l
 
         queueEmitter.on("can't be shift: Empty!", waitForSearch)       // Prevent usr click 'no' before search end
 
-        dataEmitter.on('Ask for Queue', (send) => {
-            send(queue)
+
+        const askAgain = () => dataEmitter.emit('Ask again')
+        dataEmitter.once('Ask for Queue', () => {
+            dataEmitter.emit('Queue sent', queue)
+            dataEmitter.on('Ask for Queue', askAgain)
         })
+
+
         dataEmitter.on('Send Queue back', (NewQueue) => {
             queue = NewQueue
+            dataEmitter.removeListener('Ask again', askAgain)
+            dataEmitter.once('Ask for Queue', () => {
+                dataEmitter.emit('Queue sent', queue)
+            })
         })
 
         emitter.on('Out of file', () => {
@@ -248,32 +258,44 @@ emitter.on('DataPath get!!', (files) => {               // ('Default Data Path l
 })
 
 queueEmitter.on('shift', () => {
+    console.log('shift');
     let queue
-    dataEmitter.emit('Ask for Queue', (q) => {
-        queue = q
+    dataEmitter.emit('Ask for Queue')
+    dataEmitter.on('Ask again', () => {
+        dataEmitter.emit('Ask for Queue')
     })
-    if(queue.length === 0){
-        queueEmitter.emit("can't be shift: Empty!")
-        console.log("All possible figure filtered by usr)");
-    } else{
-        printResult(queue[0][0])
-        dataEmitter.emit('check figure')
-        // The #YesNoListener is the '#ElementsInQueue - 1', so if shift cause no more element left in queue, no check will be triggered
-        queue.shift()
-    }
-    dataEmitter.emit('Sned Queue back', queue)
+    dataEmitter.on('Queue sent', (q) => {
+        queue = q
+        if(queue.length === 0){
+            queueEmitter.emit("can't be shift: Empty!")
+            console.log("All possible figure filtered by usr)");
+        } else{
+            // console.log(queue);
+            printResult(queue[0][0])
+            dataEmitter.emit('check figure')
+            // The #YesNoListener is the '#ElementsInQueue - 1', so if shift cause no more element left in queue, no check will be triggered
+            queue.shift()
+        }
+        dataEmitter.emit('Sned Queue back', queue)
+    })
 })
 
 
 queueEmitter.on('push!', (sources) => {
+    console.log("push");
     let queue
-    dataEmitter.emit('Ask for Queue', (q) => {
-        queue = q
+    dataEmitter.emit('Ask for Queue')
+    dataEmitter.on('Ask again', () => {
+        dataEmitter.emit('Ask for Queue')
     })
-    queue.push(sources)
-    if(queue.length === 0){console.error("Push Fail");}
-    dataEmitter.emit('Sned Queue back', queue)
-    dataEmitter.on('check figure', createYesNo)         // Append a #linstener('check figure') = queue.length
+    dataEmitter.on('Queue sent', (q) => {
+        queue = q
+        queue.push(sources)
+        if(queue.length === 0){console.error("Push Fail");}
+        dataEmitter.emit('Sned Queue back', queue)
+        dataEmitter.on('check figure', createYesNo)         // Append a #linstener('check figure') = queue.length
+        console.log(queue);
+    })
 })
 
 
@@ -287,10 +309,6 @@ function dataRender(files, caption, queue){
     } else {
         let file = files.shift()
         console.log(file);
-        const searchNextFile = () =>  {
-            dataEmitter.emit('Search them', files, caption, queue)
-            dataEmitter.removeAllListeners('Meet a Figure')
-        }
         // console.log(file);
         const rl = readline.createInterface({
             input: fs.createReadStream(file),
@@ -306,6 +324,12 @@ function dataRender(files, caption, queue){
         // copy and push source_temp to queue
         //
         let sources = []
+        dataEmitter.on('newListener', (evet, listener) => {
+            console.log(`[${file}]: Add ${listener}`);
+        })
+        dataEmitter.on('removeListener', (evet, listener) => {
+            console.log(`[${file}]: Remove ${listener}`);
+        })
         dataEmitter.on('Meet a Figure', () => {
             console.log(1);
             dataEmitter.on('Meet source', (s) => {
@@ -330,7 +354,11 @@ function dataRender(files, caption, queue){
         rl.on('line', (line) => {
             searchCaption(line, caption)
         })
-        return rl.on('close', searchNextFile)
+        rl.on('close', () =>  {
+            dataEmitter.emit('Search them', files, caption, queue)
+            console.log(`file "${file}" close`);
+            dataEmitter.removeAllListeners('Meet a Figure')
+        })
     }
 }
 

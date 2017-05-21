@@ -1,0 +1,212 @@
+/Users/TimerPro/GitHub/TexFigureSearch/electron-quick-start/renderer.js:311 /Users/TimerPro/GitHub/TexFigureSearch/data/.DS_Store
+/Users/TimerPro/GitHub/TexFigureSearch/electron-quick-start/renderer.js:328 [/Users/TimerPro/GitHub/TexFigureSearch/data/.DS_Store]: Add (evet, listener) => {
+            console.log(`[${file}]: Remove ${listener}`);
+        }
+/Users/TimerPro/GitHub/TexFigureSearch/electron-quick-start/renderer.js:328 [/Users/TimerPro/GitHub/TexFigureSearch/data/.DS_Store]: Add () => {
+            console.log(1);
+            dataEmitter.on('Meet source', (s) => {
+                sources.push(s)
+            })
+            dataEmitter.on('Figure not match!!', () => {
+                dataEmitter.emit('End of Figure')
+            })
+            dataEmitter.on('Match Figure get!!', () => {
+                queueEmitter.emit('push!', sources)
+            })
+            dataEmitter.on('End of Figure', () => {
+                sources = []
+                dataEmitter.removeAllListeners([
+                    'Match Figure get!!',
+                    'Figure not match!!',
+                    'Meet source',
+                ])
+            })
+        }
+/Users/TimerPro/GitHub/TexFigureSearch/electron-quick-start/renderer.js:311 /Users/TimerPro/GitHub/TexFigureSearch/data/chap2.tex
+/Users/TimerPro/GitHub/TexFigureSearch/electron-quick-start/renderer.js:328 [/Users/TimerPro/GitHub/TexFigureSearch/data/.DS_Store]: Add (evet, listener) => {
+            console.log(`[${file}]: Add ${listener}`);
+        }
+/Users/TimerPro/GitHub/TexFigureSearch/electron-quick-start/renderer.js:328 [/Users/TimerPro/GitHub/TexFigureSearch/data/.DS_Store]: Add (evet, listener) => {
+            console.log(`[${file}]: Remove ${listener}`);
+        }
+/Users/TimerPro/GitHub/TexFigureSearch/electron-quick-start/renderer.js:328 [/Users/TimerPro/GitHub/TexFigureSearch/data/chap2.tex]: Add (evet, listener) => {
+            console.log(`[${file}]: Remove ${listener}`);
+        }
+/Users/TimerPro/GitHub/TexFigureSearch/electron-quick-start/renderer.js:328 [/Users/TimerPro/GitHub/TexFigureSearch/data/.DS_Store]: Add () => {
+            console.log(1);
+            dataEmitter.on('Meet source', (s) => {
+                sources.push(s)
+            })
+            dataEmitter.on('Figure not match!!', () => {
+                dataEmitter.emit('End of Figure')
+            })
+            dataEmitter.on('Match Figure get!!', () => {
+                queueEmitter.emit('push!', sources)
+            })
+            dataEmitter.on('End of Figure', () => {
+                sources = []
+                dataEmitter.removeAllListeners([
+                    'Match Figure get!!',
+                    'Figure not match!!',
+                    'Meet source',
+                ])
+            })
+        }
+/Users/TimerPro/GitHub/TexFigureSearch/electron-quick-start/renderer.js:328 [/Users/TimerPro/GitHub/TexFigureSearch/data/chap2.tex]: Add () => {
+            console.log(1);
+            dataEmitter.on('Meet source', (s) => {
+                sources.push(s)
+            })
+            dataEmitter.on('Figure not match!!', () => {
+                dataEmitter.emit('End of Figure')
+            })
+            dataEmitter.on('Match Figure get!!', () => {
+                queueEmitter.emit('push!', sources)
+            })
+            dataEmitter.on('End of Figure', () => {
+                sources = []
+                dataEmitter.removeAllListeners([
+                    'Match Figure get!!',
+                    'Figure not match!!',
+                    'Meet source',
+                ])
+            })
+        }
+/Users/TimerPro/GitHub/TexFigureSearch/electron-quick-start/renderer.js:359 file "/Users/TimerPro/GitHub/TexFigureSearch/data/.DS_Store" close
+/Users/TimerPro/GitHub/TexFigureSearch/electron-quick-start/renderer.js:331 [/Users/TimerPro/GitHub/TexFigureSearch/data/.DS_Store]: Remove () => {
+            console.log(1);
+            dataEmitter.on('Meet source', (s) => {
+                sources.push(s)
+            })
+            dataEmitter.on('Figure not match!!', () => {
+                dataEmitter.emit('End of Figure')
+            })
+            dataEmitter.on('Match Figure get!!', () => {
+                queueEmitter.emit('push!', sources)
+            })
+            dataEmitter.on('End of Figure', () => {
+                sources = []
+                dataEmitter.removeAllListeners([
+                    'Match Figure get!!',
+                    'Figure not match!!',
+                    'Meet source',
+                ])
+            })
+        }
+/Users/TimerPro/GitHub/TexFigureSearch/electron-quick-start/renderer.js:331 [/Users/TimerPro/GitHub/TexFigureSearch/data/chap2.tex]: Remove () => {
+            console.log(1);
+            dataEmitter.on('Meet source', (s) => {
+                sources.push(s)
+            })
+            dataEmitter.on('Figure not match!!', () => {
+                dataEmitter.emit('End of Figure')
+            })
+            dataEmitter.on('Match Figure get!!', () => {
+                queueEmitter.emit('push!', sources)
+            })
+            dataEmitter.on('End of Figure', () => {
+                sources = []
+                dataEmitter.removeAllListeners([
+                    'Match Figure get!!',
+                    'Figure not match!!',
+                    'Meet source',
+                ])
+            })
+        }
+/Users/TimerPro/GitHub/TexFigureSearch/electron-quick-start/renderer.js:331 [/Users/TimerPro/GitHub/TexFigureSearch/data/.DS_Store]: Remove () => {
+            console.log(1);
+            dataEmitter.on('Meet source', (s) => {
+                sources.push(s)
+            })
+            dataEmitter.on('Figure not match!!', () => {
+                dataEmitter.emit('End of Figure')
+            })
+            dataEmitter.on('Match Figure get!!', () => {
+                queueEmitter.emit('push!', sources)
+            })
+            dataEmitter.on('End of Figure', () => {
+                sources = []
+                dataEmitter.removeAllListeners([
+                    'Match Figure get!!',
+                    'Figure not match!!',
+                    'Meet source',
+                ])
+            })
+        }
+/Users/TimerPro/GitHub/TexFigureSearch/electron-quick-start/renderer.js:331 [/Users/TimerPro/GitHub/TexFigureSearch/data/chap2.tex]: Remove () => {
+            console.log(1);
+            dataEmitter.on('Meet source', (s) => {
+                sources.push(s)
+            })
+            dataEmitter.on('Figure not match!!', () => {
+                dataEmitter.emit('End of Figure')
+            })
+            dataEmitter.on('Match Figure get!!', () => {
+                queueEmitter.emit('push!', sources)
+            })
+            dataEmitter.on('End of Figure', () => {
+                sources = []
+                dataEmitter.removeAllListeners([
+                    'Match Figure get!!',
+                    'Figure not match!!',
+                    'Meet source',
+                ])
+            })
+        }
+/Users/TimerPro/GitHub/TexFigureSearch/electron-quick-start/renderer.js:384 Figure not match!!
+/Users/TimerPro/GitHub/TexFigureSearch/electron-quick-start/renderer.js:384 Figure not match!!
+/Users/TimerPro/GitHub/TexFigureSearch/electron-quick-start/renderer.js:384 Figure not match!!
+/Users/TimerPro/GitHub/TexFigureSearch/electron-quick-start/renderer.js:384 Figure not match!!
+/Users/TimerPro/GitHub/TexFigureSearch/electron-quick-start/renderer.js:381 Match Figure get!!
+/Users/TimerPro/GitHub/TexFigureSearch/electron-quick-start/renderer.js:384 Figure not match!!
+/Users/TimerPro/GitHub/TexFigureSearch/electron-quick-start/renderer.js:384 Figure not match!!
+/Users/TimerPro/GitHub/TexFigureSearch/electron-quick-start/renderer.js:384 Figure not match!!
+/Users/TimerPro/GitHub/TexFigureSearch/electron-quick-start/renderer.js:384 Figure not match!!
+/Users/TimerPro/GitHub/TexFigureSearch/electron-quick-start/renderer.js:384 Figure not match!!
+/Users/TimerPro/GitHub/TexFigureSearch/electron-quick-start/renderer.js:245 out of file
+/Users/TimerPro/GitHub/TexFigureSearch/electron-quick-start/renderer.js:261 shift
+/Users/TimerPro/GitHub/TexFigureSearch/electron-quick-start/renderer.js:331 [/Users/TimerPro/GitHub/TexFigureSearch/data/.DS_Store]: Remove () => {
+            dataEmitter.emit('Queue sent', queue)
+            dataEmitter.on('Ask for Queue', askAgain)
+        }
+/Users/TimerPro/GitHub/TexFigureSearch/electron-quick-start/renderer.js:331 [/Users/TimerPro/GitHub/TexFigureSearch/data/chap2.tex]: Remove () => {
+            dataEmitter.emit('Queue sent', queue)
+            dataEmitter.on('Ask for Queue', askAgain)
+        }
+/Users/TimerPro/GitHub/TexFigureSearch/electron-quick-start/renderer.js:328 [/Users/TimerPro/GitHub/TexFigureSearch/data/.DS_Store]: Add () => dataEmitter.emit('Ask again')
+/Users/TimerPro/GitHub/TexFigureSearch/electron-quick-start/renderer.js:328 [/Users/TimerPro/GitHub/TexFigureSearch/data/chap2.tex]: Add () => dataEmitter.emit('Ask again')
+/Users/TimerPro/GitHub/TexFigureSearch/electron-quick-start/renderer.js:328 [/Users/TimerPro/GitHub/TexFigureSearch/data/.DS_Store]: Add () => {
+        dataEmitter.emit('Ask for Queue')
+    }
+/Users/TimerPro/GitHub/TexFigureSearch/electron-quick-start/renderer.js:328 [/Users/TimerPro/GitHub/TexFigureSearch/data/chap2.tex]: Add () => {
+        dataEmitter.emit('Ask for Queue')
+    }
+/Users/TimerPro/GitHub/TexFigureSearch/electron-quick-start/renderer.js:328 [/Users/TimerPro/GitHub/TexFigureSearch/data/.DS_Store]: Add (q) => {
+        queue = q
+        if(queue.length === 0){
+            queueEmitter.emit("can't be shift: Empty!")
+            console.log("All possible figure filtered by usr)");
+        } else{
+            // console.log(queue);
+            printResult(queue[0][0])
+            dataEmitter.emit('check figure')
+            // The #YesNoListener is the '#ElementsInQueue - 1', so if shift cause no more element left in queue, no check will be triggered
+            queue.shift()
+        }
+        dataEmitter.emit('Sned Queue back', queue)
+    }
+/Users/TimerPro/GitHub/TexFigureSearch/electron-quick-start/renderer.js:328 [/Users/TimerPro/GitHub/TexFigureSearch/data/chap2.tex]: Add (q) => {
+        queue = q
+        if(queue.length === 0){
+            queueEmitter.emit("can't be shift: Empty!")
+            console.log("All possible figure filtered by usr)");
+        } else{
+            // console.log(queue);
+            printResult(queue[0][0])
+            dataEmitter.emit('check figure')
+            // The #YesNoListener is the '#ElementsInQueue - 1', so if shift cause no more element left in queue, no check will be triggered
+            queue.shift()
+        }
+        dataEmitter.emit('Sned Queue back', queue)
+    }
+/Users/TimerPro/GitHub/TexFigureSearch/electron-quick-start/renderer.js:359 file "/Users/TimerPro/GitHub/TexFigureSearch/data/chap2.tex" close
