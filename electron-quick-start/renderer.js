@@ -225,8 +225,15 @@ emitter.on('DataPath get!!', (files) => {               // ('Default Data Path l
             removeYesNo()
         }
 
-        dataEmitter.on('Search them', (files, caption, queue) => {
-            dataRender(files, caption, queue)
+        dataRender(files, caption, queue ,() => {
+            console.log("out of file");
+            queueEmitter.removeListener("can't be shift: Empty!", waitForSearch)
+            queueEmitter.emit('shift')
+            queueEmitter.on("can't be shift: Empty!", () => {
+                emitter.emit('Figure not found')
+            })
+        }, (newFiles) => {
+            dataRender(newFiles, caption, queue)
         })
 
         queueEmitter.on('shift', () => {
@@ -261,19 +268,11 @@ emitter.on('DataPath get!!', (files) => {               // ('Default Data Path l
             })
         })
 
-        emitter.on('Out of file', () => {
-            console.log("out of file");
-            queueEmitter.removeListener("can't be shift: Empty!", waitForSearch)
-            queueEmitter.emit('shift')
-            queueEmitter.on("can't be shift: Empty!", () => {
-                emitter.emit('Figure not found')
-            })
-        })
+
+
         emitter.on('Figure not found', figNotFound)
         emitter.on('Figure found!', figFound)
 
-        // Initiation
-        dataEmitter.emit('Search them', files, caption, queue)
     })
 })
 
@@ -313,18 +312,17 @@ dataEmitter.on('Meet a Figure', () => {
     })
 })
 
-// emit 'Search them' to perform next file search
 // emit 'Figure found!' to stop search and say search success
 // emit 'Figure not found' to stop search and say search fail
-function dataRender(files, caption, queue){
+function dataRender(files, caption, queue, callOutOfFile, nextDataRender){
     if(files.length === 0){
-        emitter.emit('Out of file')
+        callOutOfFile
     } else {
         let file = files.shift()
         // console.log(file);
         const rl = readline.createInterface({
-            input: fs.createReadStream(file),
-        });
+            input: fs.createReadStream(file)
+        })
 
 
         //
@@ -341,7 +339,7 @@ function dataRender(files, caption, queue){
             searchCaption(line, caption)
         })
         rl.on('close', () =>  {
-            dataEmitter.emit('Search them', files, caption, queue)
+            nextDataRender(files)
             console.log(`file "${file}" close`);
         })
     }
