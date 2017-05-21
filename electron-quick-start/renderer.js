@@ -209,6 +209,7 @@ emitter.on('DataPath get!!', (files) => {               // ('Default Data Path l
         let queue = []
         const waitForSearch = () => {printFail("Wait for search")}
         const figNotFound = () => {
+            resultClear()
             removeYesNo()
             printFail("UNCAUGHT ERROR: No such figure exists")
         }
@@ -231,11 +232,12 @@ emitter.on('DataPath get!!', (files) => {               // ('Default Data Path l
         })
 
         emitter.on('Out of file', () => {
+            console.log("out of file");
+            queueEmitter.removeListener("can't be shift: Empty!", waitForSearch)
             queueEmitter.emit('shift')
             queueEmitter.on("can't be shift: Empty!", () => {
                 emitter.emit('Figure not found')
             })
-            queueEmitter.removeListener("can't be shift: Empty!", waitForSearch)
         })
         emitter.on('Figure not found', figNotFound)
         emitter.on('Figure found!', figFound)
@@ -254,7 +256,7 @@ queueEmitter.on('shift', () => {
         queueEmitter.emit("can't be shift: Empty!")
         console.log("All possible figure filtered by usr)");
     } else{
-        printResult(queue[0])
+        printResult(queue[0][0])
         dataEmitter.emit('check figure')
         // The #YesNoListener is the '#ElementsInQueue - 1', so if shift cause no more element left in queue, no check will be triggered
         queue.shift()
@@ -263,13 +265,15 @@ queueEmitter.on('shift', () => {
 })
 
 
-queueEmitter.on('push!', (queue) => {
-    if(queue.length === 0){
-        // queueEmitter.on('single')
-    } else if(queue.length > 1){
-        dataEmitter.on('check figure', createYesNo)
-    }
-    queueEmitter.emit('finishPush', queue)
+queueEmitter.on('push!', (sources) => {
+    let queue
+    dataEmitter.emit('Ask for Queue', (q) => {
+        queue = q
+    })
+    queue.push(sources)
+    if(queue.length === 0){console.error("Push Fail");}
+    dataEmitter.emit('Sned Queue back', queue)
+    dataEmitter.on('check figure', createYesNo)         // Append a #linstener('check figure') = queue.length
 })
 
 
@@ -282,39 +286,15 @@ function dataRender(files, caption, queue){
         emitter.emit('Out of file')
     } else {
         let file = files.shift()
-        const searchNextFile = () =>  {dataEmitter.emit('Search them', files, caption, queue)}
         console.log(file);
+        const searchNextFile = () =>  {
+            dataEmitter.emit('Search them', files, caption, queue)
+            dataEmitter.removeAllListeners('Meet a Figure')
+        }
+        // console.log(file);
         const rl = readline.createInterface({
             input: fs.createReadStream(file),
         });
-
-        rl.on('close', searchNextFile)
-
-        const DoesFigMatch = (source) => {
-            // queueEmitter.emit('getQueue', (q) => {
-            //     queue = q
-            // })
-            dataEmitter.on('Figure not match!!', () => {
-                dataEmitter.removeListener('Meet a Figure', DoesFigMatch)
-            })
-            dataEmitter.on('Match Figure get!!', () => {
-                queue.push(source.repeat(1))
-                printResult(queue[0])
-                createYesNo()
-                queueEmitter.emit('push!', queue)
-                queueEmitter.on('finishPush', (q) => {
-                    queue = q
-                })
-                dataEmitter.removeListener('Meet a Figure', DoesFigMatch)
-            })
-            // queueEmitter.emit('returnQueue', queue)
-        }
-        // queueEmitter.on('getQueue', (func) => {
-        //     func(queue)
-        // })
-        // queueEmitter.on('returnQueue', (q) => {
-        //     queue = q
-        // })
 
         // Assume \caption always come after \includegraphics or \input
         // rl emit 'Meet a Figure' when meet a "\includegraphics" or "\input".
@@ -325,31 +305,60 @@ function dataRender(files, caption, queue){
         // rl emit 'Match Figure get!!' when a \caption matches target
         // copy and push source_temp to queue
         //
-        dataEmitter.on('Meet a Figure', DoesFigMatch)
+        let sources = []
+        dataEmitter.on('Meet a Figure', () => {
+            console.log(1);
+            dataEmitter.on('Meet source', (s) => {
+                sources.push(s)
+            })
+            dataEmitter.on('Figure not match!!', () => {
+                dataEmitter.emit('End of Figure')
+            })
+            dataEmitter.on('Match Figure get!!', () => {
+                queueEmitter.emit('push!', sources)
+            })
+            dataEmitter.on('End of Figure', () => {
+                sources = []
+                dataEmitter.removeAllListeners([
+                    'Match Figure get!!',
+                    'Figure not match!!',
+                    'Meet source',
+                ])
+            })
+        })
 
         rl.on('line', (line) => {
             searchCaption(line, caption)
         })
+        return rl.on('close', searchNextFile)
     }
 }
 
 
 function searchCaption(line, targetCaption){
-    if(line.match(/\\includegraphics/g)){
-        let source = line.match(/\{.*\}/)[0]
-        dataEmitter.emit('Meet a Figure', source)
+    if(line.match(/\\begin\{figure\}/i)){
+        dataEmitter.emit('Meet a Figure')
     }
-    if(line.match(/\\input/g)){
+    if(line.match(/\\includegraphics/)){
         let source = line.match(/\{.*\}/)[0]
-        dataEmitter.emit('Meet a Figure', source)
+        dataEmitter.emit('Meet source', source)
+    }
+    if(line.match(/\\input/)){
+        let source = line.match(/\{.*\}/)[0]
+        dataEmitter.emit('Meet source', source)
     }
     if(line.match("\caption")){
         caption = line.replace('\\caption\{', '').replace(/\}$/, '').replace(/\s/g, '').replace(/Fig\.\\ref\{.*\}/g, '')
         if(caption === targetCaption){
+            console.log('Match Figure get!!');
             dataEmitter.emit('Match Figure get!!')
         } else {
+            console.log('Figure not match!!');
             dataEmitter.emit('Figure not match!!')
         }
+    }
+    if(line.match(/\\end\{figure\}/i)){
+        dataEmitter.emit('End of Figure')
     }
 }
 
@@ -408,5 +417,7 @@ function removeYesNo(){
         yesnoBlock.removeChild(document.getElementById('no'))
     }
 }
+
+
 
 
