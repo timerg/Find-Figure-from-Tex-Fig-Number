@@ -176,6 +176,13 @@ function checkDataPath (dataPath){
             if(stats.isDirectory()){
                 dirValid.textContent = "Valid (directory)"
                 fs.readdir(dataPath, (err, files) => {
+                    files = files.filter(function(fname){
+                        if(fname.charAt(0) === '.'){
+                            return false
+                        } else {
+                            return true
+                        }
+                    })
                     function joinDataPath(file){
                         return path.join(dataPath, file)
                     }
@@ -218,26 +225,39 @@ emitter.on('DataPath get!!', (files) => {               // ('Default Data Path l
             removeYesNo()
         }
 
-
         dataEmitter.on('Search them', (files, caption, queue) => {
             dataRender(files, caption, queue)
         })
 
-        queueEmitter.on("can't be shift: Empty!", waitForSearch)       // Prevent usr click 'no' before search end
-
-
-        const askAgain = () => dataEmitter.emit('Ask again')
-        dataEmitter.once('Ask for Queue', () => {
-            dataEmitter.emit('Queue sent', queue)
-            dataEmitter.on('Ask for Queue', askAgain)
+        queueEmitter.on('shift', () => {
+            console.log('shift');
+            if(queue.length === 0){
+                queueEmitter.emit("can't be shift: Empty!")
+                console.log("All possible figure filtered by usr)");
+            } else{
+                // console.log(queue);
+                printResult(queue[0][0])
+                dataEmitter.emit('check figure')
+                // The #YesNoListener is the '#ElementsInQueue - 1', so if shift cause no more element left in queue, no check will be triggered
+                queue.shift()
+            }
+            dataEmitter.emit('Sned Queue back', queue)
         })
 
 
-        dataEmitter.on('Send Queue back', (NewQueue) => {
-            queue = NewQueue
-            dataEmitter.removeListener('Ask again', askAgain)
-            dataEmitter.once('Ask for Queue', () => {
-                dataEmitter.emit('Queue sent', queue)
+        queueEmitter.on('push!', (sources) => {
+            console.log("push", sources);
+            queue.push(sources)
+            if(queue.length === 0){console.error("Push Fail");}
+            dataEmitter.on('check figure', createYesNo)         // Append a #linstener('check figure') = queue.length
+            console.log(queue);
+        })
+        queueEmitter.on("can't be shift: Empty!", waitForSearch)       // Prevent usr click 'no' before search end
+
+        dataEmitter.on('Ask for Queue', () => {
+            dataEmitter.emit('Queue sent', queue)
+            dataEmitter.once('Send Queue back', (NewQueue) => {
+                queue = NewQueue
             })
         })
 
@@ -257,49 +277,42 @@ emitter.on('DataPath get!!', (files) => {               // ('Default Data Path l
     })
 })
 
-queueEmitter.on('shift', () => {
-    console.log('shift');
-    let queue
-    dataEmitter.emit('Ask for Queue')
-    dataEmitter.on('Ask again', () => {
-        dataEmitter.emit('Ask for Queue')
-    })
-    dataEmitter.on('Queue sent', (q) => {
-        queue = q
-        if(queue.length === 0){
-            queueEmitter.emit("can't be shift: Empty!")
-            console.log("All possible figure filtered by usr)");
-        } else{
-            // console.log(queue);
-            printResult(queue[0][0])
-            dataEmitter.emit('check figure')
-            // The #YesNoListener is the '#ElementsInQueue - 1', so if shift cause no more element left in queue, no check will be triggered
-            queue.shift()
-        }
-        dataEmitter.emit('Sned Queue back', queue)
-    })
-})
-
-
-queueEmitter.on('push!', (sources) => {
-    console.log("push");
-    let queue
-    dataEmitter.emit('Ask for Queue')
-    dataEmitter.on('Ask again', () => {
-        dataEmitter.emit('Ask for Queue')
-    })
-    dataEmitter.on('Queue sent', (q) => {
-        queue = q
-        queue.push(sources)
-        if(queue.length === 0){console.error("Push Fail");}
-        dataEmitter.emit('Sned Queue back', queue)
-        dataEmitter.on('check figure', createYesNo)         // Append a #linstener('check figure') = queue.length
-        console.log(queue);
-    })
-})
 
 
 // Searching figure
+
+// Assume \caption always come after \includegraphics or \input
+// rl emit 'Meet a Figure' when meet a "\includegraphics" or "\input".
+// Save its source to source_temp (it replace the content in source_temp)
+// To prevent a non-figure \caption match target
+// rl emit 'Figure not match!!' when \caption doesn't match target
+// Remove source_temp
+// rl emit 'Match Figure get!!' when a \caption matches target
+// copy and push source_temp to queue
+//
+dataEmitter.on('Meet a Figure', () => {
+    // console.log('Meet a Figure');
+    let sources = []
+    dataEmitter.on('Meet source', (s) => {
+        // console.log('Meet source');
+        sources.push(s)
+    })
+    dataEmitter.on('Figure not match!!', () => {
+        // console.log('Figure not match!!');
+        dataEmitter.emit('End of Figure')
+    })
+    dataEmitter.on('Match Figure get!!', () => {
+        // console.log('Match Figure get!!');
+        console.log(sources);
+        queueEmitter.emit('push!', sources)
+        sources = []
+    })
+    dataEmitter.on('End of Figure', () => {
+        // console.log("End of Figure");
+        sources = []
+    })
+})
+
 // emit 'Search them' to perform next file search
 // emit 'Figure found!' to stop search and say search success
 // emit 'Figure not found' to stop search and say search fail
@@ -308,48 +321,21 @@ function dataRender(files, caption, queue){
         emitter.emit('Out of file')
     } else {
         let file = files.shift()
-        console.log(file);
         // console.log(file);
         const rl = readline.createInterface({
             input: fs.createReadStream(file),
         });
 
-        // Assume \caption always come after \includegraphics or \input
-        // rl emit 'Meet a Figure' when meet a "\includegraphics" or "\input".
-        // Save its source to source_temp (it replace the content in source_temp)
-        // To prevent a non-figure \caption match target
-        // rl emit 'Figure not match!!' when \caption doesn't match target
-        // Remove source_temp
-        // rl emit 'Match Figure get!!' when a \caption matches target
-        // copy and push source_temp to queue
+
         //
-        let sources = []
-        dataEmitter.on('newListener', (evet, listener) => {
-            console.log(`[${file}]: Add ${listener}`);
-        })
-        dataEmitter.on('removeListener', (evet, listener) => {
-            console.log(`[${file}]: Remove ${listener}`);
-        })
-        dataEmitter.on('Meet a Figure', () => {
-            console.log(1);
-            dataEmitter.on('Meet source', (s) => {
-                sources.push(s)
-            })
-            dataEmitter.on('Figure not match!!', () => {
-                dataEmitter.emit('End of Figure')
-            })
-            dataEmitter.on('Match Figure get!!', () => {
-                queueEmitter.emit('push!', sources)
-            })
-            dataEmitter.on('End of Figure', () => {
-                sources = []
-                dataEmitter.removeAllListeners([
-                    'Match Figure get!!',
-                    'Figure not match!!',
-                    'Meet source',
-                ])
-            })
-        })
+        // let sources = []
+        // dataEmitter.on('newListener', (evet, listener) => {
+        //     console.log(`[${file}]: Add ${listener}`);
+        // })
+        // dataEmitter.on('removeListener', (evet, listener) => {
+        //     console.log(`[${file}]: Remove ${listener}`);
+        // })
+
 
         rl.on('line', (line) => {
             searchCaption(line, caption)
@@ -357,10 +343,10 @@ function dataRender(files, caption, queue){
         rl.on('close', () =>  {
             dataEmitter.emit('Search them', files, caption, queue)
             console.log(`file "${file}" close`);
-            dataEmitter.removeAllListeners('Meet a Figure')
         })
     }
 }
+
 
 
 function searchCaption(line, targetCaption){
