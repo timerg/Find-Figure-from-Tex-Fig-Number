@@ -224,17 +224,23 @@ emitter.on('DataPath get!!', (files) => {               // ('Default Data Path l
         const figFound = () => {
             removeYesNo()
         }
-
-        dataRender(files, caption, queue ,() => {       // No more files
+// Callbacks
+    // No more files
+        const callOutOfFile = () => {
             console.log("out of file");
             queueEmitter.removeListener("can't be shift: Empty!", waitForSearch)
             queueEmitter.emit('shift')
             queueEmitter.on("can't be shift: Empty!", () => {
                 emitter.emit('Figure not found')
             })
-        }, (newFiles) => {
-            dataRender(newFiles, caption, queue)
-        })
+        }
+    // Read next file
+        const nextDataRender = (newFiles) => {
+            console.log(newFiles);
+            dataRender(newFiles, caption, queue, callOutOfFile, nextDataRender)
+        }
+
+        dataRender(files, caption, queue , callOutOfFile, nextDataRender)
 
         queueEmitter.on('shift', () => {
             console.log('shift');
@@ -282,7 +288,7 @@ emitter.on('DataPath get!!', (files) => {               // ('Default Data Path l
 
 function dataRender(files, caption, queue, callOutOfFile, nextDataRender){
     if(files.length === 0){
-        callOutOfFile
+        callOutOfFile()
     } else {
         let file = files.shift()
         // console.log(file);
@@ -318,7 +324,7 @@ function dataRender(files, caption, queue, callOutOfFile, nextDataRender){
 
 function searchCaption(line, targetCaption, meetFig, takeSource, pushSoureces, endFig){
     if(line.match(/\\begin\{figure\}/i)){
-        meetFig
+        meetFig()
     }
     if(line.match(/\\includegraphics/)){
         let source = line.match(/\{.*\}/)[0]
@@ -333,14 +339,14 @@ function searchCaption(line, targetCaption, meetFig, takeSource, pushSoureces, e
         caption = line.replace('\\caption\{', '').replace(/\}$/, '').replace(/\s/g, '').replace(/Fig\.\\ref\{.*\}/g, '')
         if(caption === targetCaption){
             console.log('Match Figure get!!');
-            pushSoureces
+            pushSoureces()
         } else {
             console.log('Figure not match!!');
-            pushSoureces
+            pushSoureces()
         }
     }
     if(line.match(/\\end\{figure\}/i)){
-        endFig
+        endFig()
     }
 }
 
