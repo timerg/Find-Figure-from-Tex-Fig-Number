@@ -389,11 +389,13 @@ function printFail(text){
     imgsrc.textContent = text
 }
 function printResult(source){
-    source = source.replace('\{', '').replace('\}', '').replace(/\//g, ' / ')
-    imgsrc.textContent = `This figure is at "${source}".`
+    source = source.replace('\{', '').replace('\}', '')
+    imgsrc.textContent = `This figure is at "${source.replace(/\//g, ' / ')}".`
     if(!source.includes(".eps")){
         emitter.emit('need globalPath', (cwd) => {
-            img.src = path.join(cwd, source.replace('{', '').replace('}', ''))
+            console.log(source);
+            img.src = path.join(cwd, source)
+            console.log(img.src);
         })
     } else{
         img.src = "Img/EPSerror.jpeg"

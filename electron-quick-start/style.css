@@ -6,9 +6,6 @@ body{
     margin-bottom: 0;
 }
 
-html {
-    height: 600px;
-}
 
 #nthu-logo {
     position: fixed;
@@ -29,7 +26,7 @@ html {
     margin-bottom:  1em;
     margin-right:  0;
     margin-top: 5em;
-    height: 350px;
+    /*height: 350px;*/
 
 }
 
@@ -51,37 +48,44 @@ html {
 }
 
 #yes {
+    box-shadow: 1px 1px 5px #888888;
     z-index: 5;
     position: absolute;
-    background: #B9C406;
+    background: #bfbfbf;
     margin-top: 0;
-    margin-left: 150px;
+    margin-left: 170px;
     /*margin-bottom: 1em;*/
-    width: 140px;
+    width: 150px;
     height: 50px;
-    color: #F4F3F4;
+    color: hsl(0, 0%, 100%);
     text-align: center;
     font-size: 22px;
     padding-top: 20px;
 }
 #no {
+    box-shadow: 1px 1px 5px #888888;
+    z-index: 5;
     position: relative;
-    background: #D50B53;
+    background: hsl(0, 0%, 100%);
     margin-top: 0;
-    margin-bottom: 1em;
-    width: 140px;
+    margin-left: 0;
+    width: 150px;
     height: 50px;
-    color: #F4F3F4;
+    color: #bfbfbf;
     text-align: center;
     font-size: 22px;
     padding-top: 20px;
 }
 
-#no:hover{
-    background: hsl(338, 40%, 43%);
+#no:active{
+    box-shadow: none;
+    margin-left: 1px;
+    margin-top: 1px;
 }
-#yes:hover{
-    background: hsl(63, 44%, 39%);
+#yes:active{
+    box-shadow: none;
+    margin-left: 171px;
+    margin-top: 1px;
 }
 
 #imgBlock {
