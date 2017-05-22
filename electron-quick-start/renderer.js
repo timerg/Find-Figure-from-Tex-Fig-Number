@@ -69,16 +69,16 @@ ipcRenderer.on('main-render', () => {
 function lofRender(lofPath, reOpen){
     if(reOpen){
         createLOFzone((p) => {
-            lofListeningBeSearch(p)
+            getCaption(p)
         });
     } else {
         fs.stat(lofPath, (err, stats) => {
             if (err) {
                 createLOFzone((p) => {
-                    lofListeningBeSearch(p)
+                    getCaption(p)
                 });
             } else {
-                lofListeningBeSearch(lofPath)
+                getCaption(lofPath)
                 // emitter.emit('lof', lofPath);
                 // doSomething(lofPath)
             }
@@ -143,14 +143,20 @@ function createLOFzone(callback){
     })
 }
 
-function lofListeningBeSearch(lofPath) {
+function getCaption(lofPath) {
+    let caption
     button_find.addEventListener("click", function(event) {
-        searchFile(lofPath)
-    });
+        searchFile(lofPath, (captionHold) => {
+            caption = captionHold
+            emitter.emit('getfiles', (f) => {
+                mainRender(caption, f.slice(0, f.length))
+            })
+        })
+    })
 }
 
-// PreProcess: DataPath and caption finding
-function searchFile(lofPath) {
+// PreProcess: Caption finding
+function searchFile(lofPath, captionHolder) {
     const rl = readline.createInterface({
         input: fs.createReadStream(lofPath),
     });
@@ -170,12 +176,12 @@ function searchFile(lofPath) {
         } else if (l === 0){
             printFail("No such figure exist or the .lof file is wrong!")
         } else {
-            emitter.emit('fig caption get!!', captionArray[0]);
+            captionHolder(captionArray[0])
         }
     })
 }
- // Check validation of data
- // emit 'DataPath get!!' if success
+
+// Get data Files for search
 function checkDataPath (dataPath){
     fs.stat(dataPath, (err, stats) => {
         let files
@@ -195,11 +201,11 @@ function checkDataPath (dataPath){
                     files = files.filter((fname) => {
                         return (fname !== "test.tex")
                     })
-                    console.log(files);
                     function joinDataPath(file){
                         return path.join(dataPath, file)
                     }
-                    emitter.emit('DataPath get!!', files.map(joinDataPath))
+                    files = files.map(joinDataPath)
+                    emitter.emit('FilesReady', files)
                 })
             } else if(stats.isFile()) {
                 if(dataPath.includes(".tex")){
@@ -207,7 +213,7 @@ function checkDataPath (dataPath){
                 } else {
                     dirValid.textContent = "Valid (file)"
                 }
-                emitter.emit('DataPath get!!', [file])
+                emitter.emit('FilesReady', files)
             }
         }
     })
@@ -221,43 +227,45 @@ getData.addEventListener('input', function() {
     checkDataPath(dirPath)      // emit 'DataPath get!!'
 }, false);
 
-
-
-emitter.on('DataPath get!!', (files) => {               // ('Default Data Path loaded' | 'input') => checkDataPath => this
-    emitter.on('fig caption get!!', (caption) => {      // lofListeningBeSearch('click') => searchFile => this('fig caption get!!')
-        console.log(files);
-        let queue = []
-        // Open queue
-        const waitForSearch = () => {printFail("Wait for search")}
-        const figNotFound = () => {
-            resultClear()
-            removeYesNo()
-            console.log('figure not found');
-            printFail("UNCAUGHT ERROR: No such figure exists")
-        }
-// Callbacks
-    // Push!
-        const pushToQueue = (sources) => {
-            console.log(queue);
-            queue.push(sources)
-            console.log(queue);
-            if(queue.length === 0){console.error("Push Fail")}
-        }
-
-    // No more files
-        const callOutOfFile = () => {
-            console.log("out of file");
-            shiftFigure(queue)
-        }
-
-    // Read next file
-        const nextDataRender = (newFiles) => {
-            dataRender(newFiles, caption, pushToQueue, callOutOfFile, nextDataRender)
-        }
-
-        dataRender(files, caption, pushToQueue, callOutOfFile, nextDataRender)
+emitter.on('FilesReady', (f) => {
+    emitter.on('getfiles', (func) => {
+        func(f)
     })
 })
+
+function mainRender(caption, files){
+    let queue = []
+    // Open queue
+    const waitForSearch = () => {printFail("Wait for search")}
+    const figNotFound = () => {
+        resultClear()
+        removeYesNo()
+        console.log('figure not found');
+        printFail("UNCAUGHT ERROR: No such figure exists")
+    }
+// Callbacks
+// Push!
+    const pushToQueue = (sources) => {
+        console.log(queue);
+        queue.push(sources)
+        console.log(queue);
+        if(queue.length === 0){console.error("Push Fail")}
+    }
+
+// No more files
+    const callOutOfFile = () => {
+        console.log("out of file");
+        shiftFigure(queue)
+    }
+
+// Read next file
+    const nextDataRender = (newFiles) => {
+        dataRender(newFiles, caption, pushToQueue, callOutOfFile, nextDataRender)
+    }
+
+    dataRender(files, caption, pushToQueue, callOutOfFile, nextDataRender)
+
+}
 
 
 
@@ -296,7 +304,7 @@ function dataRender(files, caption, pushToQueue, callOutOfFile, nextDataRender){
         })
         rl.on('close', () =>  {
             nextDataRender(files)
-            console.log(`file "${file}" close`);
+            // console.log(`file "${file}" close`);
         })
     }
 }
@@ -317,11 +325,11 @@ function searchCaption(line, targetCaption, meetFig, takeSource, pushSoureces, e
     if(line.match("\caption")){
         caption = line.replace('\\caption\{', '').replace(/\}$/, '').replace(/\s/g, '').replace(/Fig\.\\ref\{.*\}/g, '')
         if(caption === targetCaption){
-            console.log('Match Figure get!!');
+            // console.log('Match Figure get!!');
             pushSoureces()
             endFig()
         } else {
-            console.log('Figure not match!!');
+            // console.log('Figure not match!!');
             endFig()
         }
     }
@@ -399,3 +407,7 @@ function removeYesNo(){
 }
 
 
+//
+// let a = [1,2,3]
+// a.slice(0, a.length)
+// console.log(a);
