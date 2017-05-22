@@ -54,18 +54,7 @@ let objectFig = new Figure()
 ipcRenderer.on('main-render', () => {
     ipcRenderer.on('cwd', (event, cwd) => {
         const lofPath = path.join(cwd, "main.lof");
-        fs.stat(lofPath, (err, stats) => {
-            if (err) {
-                createLOFzone((p) => {
-                    // doSomething(p)
-                    lofListeningBeSearch(p)
-                });
-            } else {
-                lofListeningBeSearch(lofPath)
-                // emitter.emit('lof', lofPath);
-                // doSomething(lofPath)
-            }
-        })
+        lofRender(lofPath)
         // DataPath
         const dataPath = path.join(cwd, "data")
         getData.value = dataPath
@@ -76,6 +65,21 @@ ipcRenderer.on('main-render', () => {
         })
     });
 });
+
+function lofRender(lofPath){
+    fs.stat(lofPath, (err, stats) => {
+        if (err) {
+            createLOFzone((p) => {
+                // doSomething(p)
+                lofListeningBeSearch(p)
+            });
+        } else {
+            lofListeningBeSearch(lofPath)
+            // emitter.emit('lof', lofPath);
+            // doSomething(lofPath)
+        }
+    })
+}
 
 //// Drop and select lof
 document.addEventListener('dragover', (evt) => {
@@ -102,6 +106,7 @@ function checkLOF(lofPath) {
             modifyLOFzone(`Your .lof is "${lofPath}"`);
     })
 }
+
 function createLOFzone(callback){
     let drop_zone = document.createElement("div")
     drop_zone.id = "drop_zone"
@@ -132,6 +137,7 @@ function createLOFzone(callback){
         checkLOF(path[0])
     })
 }
+
 function lofListeningBeSearch(lofPath) {
     button_find.addEventListener("click", function(event) {
         searchFile(lofPath)
