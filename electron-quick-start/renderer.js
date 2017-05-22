@@ -18,20 +18,6 @@ const lofBox = document.getElementById('lofBox')
 const button_find = document.getElementById("button_find")
 const getFignumber = document.getElementById("getFignumber")
 
-// DataType
-function Figure(number, source , exist, caption){
-    this.number = number;
-    this.source = source;
-    this.exist = exist;
-    this.caption = caption;
-    this.clear = function(){
-        this.number = undefined
-        this.source = undefined
-        this.exist = undefined
-        this.caption = undefined
-    }
-}
-
 
 // Event Emitter
 const emitter = new EventEmitter();
@@ -45,7 +31,7 @@ const myEF = require('./LIB/myEveryFiles.js')
 let dirPath
 let lofpath
 let data
-let objectFig = new Figure()
+
 //
 
 
@@ -146,24 +132,44 @@ function createLOFzone(callback){
 function getCaption(lofPath) {
     let caption
     button_find.addEventListener("click", function(event) {
-        searchFile(lofPath, (captionHold) => {
+        checkFigNumFormat(getFignumber.value, (n) => {
+            figNumber = n
+        }, (c) => {
+            figChar = c
+        })
+        console.log(`fig num in getCaption: ${figNumber}`);
+        searchFile(lofPath, figNumber, (captionHold) => {
             caption = captionHold
             emitter.emit('getfiles', (f) => {
-                mainRender(caption, f.slice(0, f.length))
+                mainRender(caption, f.slice(0, f.length), figChar)
             })
         })
     })
 }
 
+function checkFigNumFormat(inputString, figNum, figCh){
+    let figNumber = inputString.match(/[0-9]*\.[0-9]*[a-z]?/gi)[0]
+    console.log(`${figNumber}`);
+    let figChar
+    if(figNumber.charAt(figNumber.length - 1).match(/[a-z]/i)){
+        figChar = figNumber.charAt(figNumber.length - 1)
+        figNumber = figNumber.slice(0, figNumber.length - 1)
+    }
+    console.log(`${figNumber} and ${figChar} in checkFigNumFormat`);
+    figNum(figNumber)
+    figCh(figChar)
+}
+
 // PreProcess: Caption finding
-function searchFile(lofPath, captionHolder) {
+function searchFile(lofPath, figNumber, captionHolder) {
     const rl = readline.createInterface({
         input: fs.createReadStream(lofPath),
     });
     let captionArray = []
     rl.on('line', (line) => {
         // console.log(line);
-        if(line.includes(`\\numberline \{${getFignumber.value}\}`)){
+        console.log(figNumber);
+        if(line.includes(`\\numberline \{${figNumber}\}`)){
             let caption = line.match(/ignorespaces.*relax/g)[0]
             let captionToWrite = (caption.replace('ignorespaces ', '').replace('\\relax', '').replace(/\s/g, '').replace(/Fig.*\\hbox\{\}/g, ''))
             captionArray.push(captionToWrite)
@@ -233,13 +239,11 @@ emitter.on('FilesReady', (f) => {
     })
 })
 
-function mainRender(caption, files){
+function mainRender(caption, files, figChar){
     let queue = []
     // Open queue
     const waitForSearch = () => {printFail("Wait for search")}
     const figNotFound = () => {
-        resultClear()
-        removeYesNo()
         console.log('figure not found');
         printFail("UNCAUGHT ERROR: No such figure exists")
     }
@@ -255,7 +259,7 @@ function mainRender(caption, files){
 // No more files
     const callOutOfFile = () => {
         console.log("out of file");
-        shiftFigure(queue)
+        shiftFigure(queue, figChar)
     }
 
 // Read next file
@@ -341,14 +345,23 @@ function searchCaption(line, targetCaption, meetFig, takeSource, pushSoureces, e
 function shiftFigure(queue, figChar){
     if(queue.length === 0){
         printFail(`No such figure exist or the data is wrong!`)
-        resultClear()
-        removeYesNo()
         console.log("All possible figure filtered by usr)")
     } else {
-        outputFig = queue.shift()
-        printResult(outputFig[0])
-        if(queue.length !== 0){
-            createYesNo(queue, figChar)
+        let charNum = charToNum(figChar)
+        if(charNum === -1){
+            printFail("No such figure exists. (Wrong fig char: a, b, c ...). ")
+        } else {
+            outputFig = queue.shift()
+            console.log(outputFig);
+            let source = outputFig[charNum - 1]
+            if(source){
+                printResult(source)
+                if(queue.length !== 0){
+                    createYesNo(queue, figChar)
+                }
+            }else {
+                printFail("No such figure exists. (Wrong fig char: a, b, c ...). ")
+            }
         }
     }
 }
@@ -400,6 +413,8 @@ function createYesNo(queue, figChar){
 }
 
 function removeYesNo(){
+    resultClear()
+    removeYesNo()
     if(yesnoBlock.childNodes[0]){
         yesnoBlock.removeChild(document.getElementById('yes'))
         yesnoBlock.removeChild(document.getElementById('no'))
@@ -407,7 +422,46 @@ function removeYesNo(){
 }
 
 
+function charToNum(char) {
+    switch (char) {
+        case 'a':
+            return 1;
+            break;
+        case 'b':
+            return 2;
+            break;
+        case 'c':
+            return 3;
+            break;
+        case 'd':
+            return 4;
+            break;
+        case 'e':
+            return 5;
+            break;
+        case 'f':
+            return 6;
+            break;
+        case 'A':
+            return 1;
+            break;
+        case 'B':
+            return 2;
+            break;
+        case 'C':
+            return 3;
+            break;
+        case 'D':
+            return 4;
+            break;
+        case 'E':
+            return 5;
+            break;
+        case 'F':
+            return 6;
+            break;
+        default: -1
+
+    }
+}
 //
-// let a = [1,2,3]
-// a.slice(0, a.length)
-// console.log(a);
