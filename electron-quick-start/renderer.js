@@ -35,8 +35,6 @@ function Figure(number, source , exist, caption){
 
 // Event Emitter
 const emitter = new EventEmitter();
-const dataEmitter = new MyEmitter();
-const queueEmitter = new MyEmitter();
 // const figureEmitter = new MyEmitter();
 // const globalpathEmitter = new MyEmitter();
 
@@ -176,13 +174,17 @@ function checkDataPath (dataPath){
             if(stats.isDirectory()){
                 dirValid.textContent = "Valid (directory)"
                 fs.readdir(dataPath, (err, files) => {
-                    files = files.filter(function(fname){
+                    files = files.filter((fname) => {
                         if(fname.charAt(0) === '.'){
                             return false
                         } else {
                             return true
                         }
                     })
+                    // files = files.filter((fname) => {
+                    //     return (fname !== "test.tex")
+                    // })
+                    console.log(files);
                     function joinDataPath(file){
                         return path.join(dataPath, file)
                     }
@@ -225,56 +227,26 @@ emitter.on('DataPath get!!', (files) => {               // ('Default Data Path l
             removeYesNo()
         }
 // Callbacks
+    // Push!
+        const pushToQueue = (sources) => {
+            console.log(queue);
+            queue.push(sources)
+            console.log(queue);
+            if(queue.length === 0){console.error("Push Fail")}
+        }
+
     // No more files
         const callOutOfFile = () => {
             console.log("out of file");
-            queueEmitter.removeListener("can't be shift: Empty!", waitForSearch)
-            queueEmitter.emit('shift')
-            queueEmitter.on("can't be shift: Empty!", () => {
-                emitter.emit('Figure not found')
-            })
+            shiftFigure(queue)
         }
+
     // Read next file
         const nextDataRender = (newFiles) => {
-            console.log(newFiles);
-            dataRender(newFiles, caption, queue, callOutOfFile, nextDataRender)
+            dataRender(newFiles, caption, pushToQueue, callOutOfFile, nextDataRender)
         }
 
-        dataRender(files, caption, queue , callOutOfFile, nextDataRender)
-
-        queueEmitter.on('shift', () => {
-            console.log('shift');
-            if(queue.length === 0){
-                queueEmitter.emit("can't be shift: Empty!")
-                console.log("All possible figure filtered by usr)");
-            } else{
-                // console.log(queue);
-                printResult(queue[0][0])
-                dataEmitter.emit('check figure')
-                // The #YesNoListener is the '#ElementsInQueue - 1', so if shift cause no more element left in queue, no check will be triggered
-                queue.shift()
-            }
-            dataEmitter.emit('Sned Queue back', queue)
-        })
-
-
-        queueEmitter.on('push!', (sources) => {
-            console.log("push", sources);
-            queue.push(sources)
-            if(queue.length === 0){console.error("Push Fail");}
-            dataEmitter.on('check figure', createYesNo)         // Append a #linstener('check figure') = queue.length
-            console.log(queue);
-        })
-        queueEmitter.on("can't be shift: Empty!", waitForSearch)       // Prevent usr click 'no' before search end
-
-        dataEmitter.on('Ask for Queue', () => {
-            dataEmitter.emit('Queue sent', queue)
-            dataEmitter.once('Send Queue back', (NewQueue) => {
-                queue = NewQueue
-            })
-        })
-
-
+        dataRender(files, caption, pushToQueue, callOutOfFile, nextDataRender)
 
         emitter.on('Figure not found', figNotFound)
         emitter.on('Figure found!', figFound)
@@ -286,7 +258,7 @@ emitter.on('DataPath get!!', (files) => {               // ('Default Data Path l
 
 // Searching figure
 
-function dataRender(files, caption, queue, callOutOfFile, nextDataRender){
+function dataRender(files, caption, pushToQueue, callOutOfFile, nextDataRender){
     if(files.length === 0){
         callOutOfFile()
     } else {
@@ -305,12 +277,16 @@ function dataRender(files, caption, queue, callOutOfFile, nextDataRender){
             }, () => {                              // pushSoureces
                 if(sources[0] === 'head'){
                     sources.shift()
-                    queue.push(sources)
+                    pushToQueue(sources)
                 } else {
                     console.error(`Fig order is wrong in file for fig caption "${caption}"`);
                 }
-            }, () => {
+            }, () => {                              // endFig
                 sources  = []
+            }, () => {                              // checkEndFig
+                if(sources.length !== 0){
+                    console.error("UNCAUGHT ERROR: sources should be clean but not!");
+                }
             })
         })
         rl.on('close', () =>  {
@@ -320,9 +296,7 @@ function dataRender(files, caption, queue, callOutOfFile, nextDataRender){
     }
 }
 
-
-
-function searchCaption(line, targetCaption, meetFig, takeSource, pushSoureces, endFig){
+function searchCaption(line, targetCaption, meetFig, takeSource, pushSoureces, endFig, checkEndFig){
     if(line.match(/\\begin\{figure\}/i)){
         meetFig()
     }
@@ -340,13 +314,27 @@ function searchCaption(line, targetCaption, meetFig, takeSource, pushSoureces, e
         if(caption === targetCaption){
             console.log('Match Figure get!!');
             pushSoureces()
+            endFig()
         } else {
             console.log('Figure not match!!');
-            pushSoureces()
+            endFig()
         }
     }
     if(line.match(/\\end\{figure\}/i)){
-        endFig()
+        checkEndFig()
+    }
+}
+
+function shiftFigure(queue, figChar){
+    if(queue.length === 0){
+        printFail(`No such figure exist or the data is wrong!`)
+        console.log("All possible figure filtered by usr)")
+    } else {
+        outputFig = queue.shift()
+        printResult(outputFig[0])
+        if(queue.length !== 0){
+            createYesNo(queue, figChar)
+        }
     }
 }
 
@@ -377,7 +365,7 @@ function resultClear(){
 }
 
 ////// create decsion block for figure with no caption
-function createYesNo(){
+function createYesNo(queue, figChar){
     if(!yesnoBlock.hasChildNodes()){
         var yesDiv = document.createElement('div')
         yesDiv.id =  'yes'
@@ -388,13 +376,10 @@ function createYesNo(){
         yesnoBlock.appendChild(yesDiv)
         yesnoBlock.appendChild(noDiv)
         yesDiv.addEventListener('click', () => {
-            emitter.emit('Figure found!')
+            removeYesNo()
         })
         noDiv.addEventListener('click', () => {
-            queueEmitter.emit('shift')
-            // queueEmitter.on('finishShift', (q) => {
-            //     queue = q
-            // })
+            shiftFigure(queue, figChar)
         })
     }
 }
