@@ -180,6 +180,7 @@ function searchFile(lofPath, figNumber, captionHolder) {
         if(l > 1){
             printFail("ERROR: Repeated figure number appear in .lof file");
         } else if (l === 0){
+            resultClear()
             printFail("No such figure exist or the .lof file is wrong!")
         } else {
             captionHolder(captionArray[0])
@@ -204,9 +205,9 @@ function checkDataPath (dataPath){
                             return true
                         }
                     })
-                    files = files.filter((fname) => {
-                        return (fname !== "test.tex")
-                    })
+                    // files = files.filter((fname) => {
+                    //     return (fname !== "test.tex")
+                    // })
                     function joinDataPath(file){
                         return path.join(dataPath, file)
                     }
@@ -250,9 +251,7 @@ function mainRender(caption, files, figChar){
 // Callbacks
 // Push!
     const pushToQueue = (sources) => {
-        console.log(queue);
         queue.push(sources)
-        console.log(queue);
         if(queue.length === 0){console.error("Push Fail")}
     }
 
@@ -293,6 +292,7 @@ function dataRender(files, caption, pushToQueue, callOutOfFile, nextDataRender){
                 sources.push(source)
             }, () => {                              // pushSoureces
                 if(sources[0] === 'head'){
+                    console.log(sources);
                     sources.shift()
                     pushToQueue(sources)
                 } else {
@@ -328,13 +328,21 @@ function searchCaption(line, targetCaption, meetFig, takeSource, pushSoureces, e
     }
     if(line.match("\caption")){
         caption = line.replace('\\caption\{', '').replace(/\}$/, '').replace(/\s/g, '').replace(/Fig\.\\ref\{.*\}/g, '')
-        if(caption === targetCaption){
-            // console.log('Match Figure get!!');
-            pushSoureces()
-            endFig()
-        } else {
-            // console.log('Figure not match!!');
-            endFig()
+        if(caption !== ''){
+            if(targetCaption.includes(caption)){
+                pushSoureces()
+                endFig()
+            } else {
+                endFig()
+            }
+        } else{
+            if(targetCaption === ''){
+                console.log("empty");
+                pushSoureces()
+                endFig()
+            } else {
+                endFig()
+            }
         }
     }
     if(line.match(/\\end\{figure\}/i)){
@@ -347,13 +355,20 @@ function shiftFigure(queue, figChar){
         printFail(`No such figure exist or the data is wrong!`)
         console.log("All possible figure filtered by usr)")
     } else {
-        let charNum = charToNum(figChar)
-        if(charNum === -1){
-            printFail("No such figure exists. (Wrong fig char: a, b, c ...). ")
+        let charNum
+        if(figChar){
+            charNum = charToNum(figChar)
+            if(charNum === -1){
+                printFail("No such figure exists. (Wrong fig char: a, b, c ...). ")
+            }
         } else {
             outputFig = queue.shift()
             console.log(outputFig);
-            let source = outputFig[charNum - 1]
+            if(charNum){
+                let source = outputFig[charNum - 1]
+            } else {
+                source = outputFig[0]
+            }
             if(source){
                 printResult(source)
                 if(queue.length !== 0){
@@ -370,12 +385,10 @@ function shiftFigure(queue, figChar){
 ////// Print the search result in window
 function printFail(text){
     img.src = ''
-    imgsrc.style.marginLeft = 10;
     // console.log(imgsrc.style.marginLeft)
     imgsrc.textContent = text
 }
 function printResult(source){
-    imgsrc.style.marginLeft = 332;
     source = source.replace('\{', '').replace('\}', '').replace(/\//g, ' / ')
     imgsrc.textContent = `This figure is at "${source}".`
     if(!source.includes(".eps")){
@@ -395,6 +408,7 @@ function resultClear(){
 ////// create decsion block for figure with no caption
 function createYesNo(queue, figChar){
     if(!yesnoBlock.hasChildNodes()){
+        imgsrc.style.marginTop = 100
         var yesDiv = document.createElement('div')
         yesDiv.id =  'yes'
         yesDiv.textContent = "Right figure?"
@@ -409,13 +423,15 @@ function createYesNo(queue, figChar){
         noDiv.addEventListener('click', () => {
             shiftFigure(queue, figChar)
         })
+        button_find.addEventListener('click', () => {
+            removeYesNo()
+        })
     }
 }
 
 function removeYesNo(){
-    resultClear()
-    removeYesNo()
-    if(yesnoBlock.childNodes[0]){
+    // resultClear()
+    if(yesnoBlock.childNodes.length > 1){
         yesnoBlock.removeChild(document.getElementById('yes'))
         yesnoBlock.removeChild(document.getElementById('no'))
     }

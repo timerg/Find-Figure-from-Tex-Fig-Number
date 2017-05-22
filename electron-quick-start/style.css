@@ -1,6 +1,13 @@
 body{
     overflow: auto;
     font-family: "Gill Sans Extrabold", Helvetica, sans-serif;
+    color: #A882C1;
+    /*height: 600px;*/
+    margin-bottom: 0;
+}
+
+html {
+    height: 600px;
 }
 
 #nthu-logo {
@@ -13,15 +20,16 @@ body{
 }
 
 #itemBox{
-    z-index: 2;
-    background-color: hsl(60, 100%, 85%);
+    z-index: 1;
+    background-color: #F4F3F4;
     position: relative;
     padding-left: 1em;
     padding-top: 1em;
     padding-bottom: 1em;
-    margin-bottom:  2em;
+    margin-bottom:  1em;
     margin-right:  0;
-    margin-top:     5em;
+    margin-top: 5em;
+    height: 350px;
 
 }
 
@@ -45,35 +53,35 @@ body{
 #yes {
     z-index: 5;
     position: absolute;
-    background: hsl(97, 40%, 59%);
+    background: #B9C406;
     margin-top: 0;
     margin-left: 150px;
     /*margin-bottom: 1em;*/
     width: 140px;
     height: 50px;
-    color: white;
+    color: #F4F3F4;
     text-align: center;
     font-size: 22px;
     padding-top: 20px;
 }
 #no {
     position: relative;
-    background: hsl(1, 40%, 59%);
+    background: #D50B53;
     margin-top: 0;
     margin-bottom: 1em;
     width: 140px;
     height: 50px;
-    color: white;
+    color: #F4F3F4;
     text-align: center;
     font-size: 22px;
     padding-top: 20px;
 }
 
 #no:hover{
-    background: hsl(1, 50%, 50%);
+    background: hsl(338, 40%, 43%);
 }
 #yes:hover{
-    background: hsl(97, 50%, 50%);
+    background: hsl(63, 44%, 39%);
 }
 
 #imgBlock {
@@ -82,17 +90,25 @@ body{
     margin-bottom: 1em;
 }
 
+#yesNoBlock {
+    transition-delay: 2s;
+    z-index: 2;
+    position: absolute;
+    margin-top: 40px;
+    margin-left: 332px;
+}
+
 #imgsrc {
     transition-delay: 2s;
     z-index: 2;
     position: absolute;
-    margin-top: 0;
+    margin-top: 0px;
     margin-left: 332px;
 }
 
 h2 {
     z-index: 2;
-    color: hsl(232, 86%, 44%);
+    color: #824CA7;
     position: relative;
     z-index: 4;
 }
