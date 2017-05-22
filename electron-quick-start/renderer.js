@@ -66,19 +66,24 @@ ipcRenderer.on('main-render', () => {
     });
 });
 
-function lofRender(lofPath){
-    fs.stat(lofPath, (err, stats) => {
-        if (err) {
-            createLOFzone((p) => {
-                // doSomething(p)
-                lofListeningBeSearch(p)
-            });
-        } else {
-            lofListeningBeSearch(lofPath)
-            // emitter.emit('lof', lofPath);
-            // doSomething(lofPath)
-        }
-    })
+function lofRender(lofPath, reOpen){
+    if(reOpen){
+        createLOFzone((p) => {
+            lofListeningBeSearch(p)
+        });
+    } else {
+        fs.stat(lofPath, (err, stats) => {
+            if (err) {
+                createLOFzone((p) => {
+                    lofListeningBeSearch(p)
+                });
+            } else {
+                lofListeningBeSearch(lofPath)
+                // emitter.emit('lof', lofPath);
+                // doSomething(lofPath)
+            }
+        })
+    }
 }
 
 //// Drop and select lof
@@ -187,9 +192,9 @@ function checkDataPath (dataPath){
                             return true
                         }
                     })
-                    // files = files.filter((fname) => {
-                    //     return (fname !== "test.tex")
-                    // })
+                    files = files.filter((fname) => {
+                        return (fname !== "test.tex")
+                    })
                     console.log(files);
                     function joinDataPath(file){
                         return path.join(dataPath, file)
@@ -220,17 +225,15 @@ getData.addEventListener('input', function() {
 
 emitter.on('DataPath get!!', (files) => {               // ('Default Data Path loaded' | 'input') => checkDataPath => this
     emitter.on('fig caption get!!', (caption) => {      // lofListeningBeSearch('click') => searchFile => this('fig caption get!!')
-        // Open queue
+        console.log(files);
         let queue = []
+        // Open queue
         const waitForSearch = () => {printFail("Wait for search")}
         const figNotFound = () => {
             resultClear()
             removeYesNo()
             console.log('figure not found');
             printFail("UNCAUGHT ERROR: No such figure exists")
-        }
-        const figFound = () => {
-            removeYesNo()
         }
 // Callbacks
     // Push!
@@ -253,10 +256,6 @@ emitter.on('DataPath get!!', (files) => {               // ('Default Data Path l
         }
 
         dataRender(files, caption, pushToQueue, callOutOfFile, nextDataRender)
-
-        emitter.on('Figure not found', figNotFound)
-        emitter.on('Figure found!', figFound)
-
     })
 })
 
@@ -334,6 +333,8 @@ function searchCaption(line, targetCaption, meetFig, takeSource, pushSoureces, e
 function shiftFigure(queue, figChar){
     if(queue.length === 0){
         printFail(`No such figure exist or the data is wrong!`)
+        resultClear()
+        removeYesNo()
         console.log("All possible figure filtered by usr)")
     } else {
         outputFig = queue.shift()
