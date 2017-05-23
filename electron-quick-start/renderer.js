@@ -1,7 +1,6 @@
 const fs = require('fs');
 const readline = require('readline');
 const {ipcRenderer} = require('electron')
-const stream = require('stream');
 const path = require('path');
 const EventEmitter = require('events');
 class MyEmitter extends EventEmitter {}
@@ -13,7 +12,6 @@ const imgsrc = document.getElementById("imgsrc")
 const yesnoBlock = document.getElementById('yesNoBlock');
 const dirvalid = document.getElementById("dirValid")
 const getData = document.getElementById('getData')
-const datalist = document.getElementById("data_fdlist")
 const lofBox = document.getElementById('lofBox')
 const button_find = document.getElementById("button_find")
 const getFignumber = document.getElementById("getFignumber")
@@ -24,9 +22,6 @@ const emitter = new EventEmitter();
 // const figureEmitter = new MyEmitter();
 // const globalpathEmitter = new MyEmitter();
 
-// self define
-const myRl = require('./LIB/myReadLine')
-const myEF = require('./LIB/myEveryFiles.js')
 // let globalpath
 let dirPath
 let lofpath
@@ -355,6 +350,7 @@ function shiftFigure(queue, figChar){
         printFail(`No such figure exist or the data is wrong!`)
         console.log("All possible figure filtered by usr)")
     } else {
+        console.log(queue, figChar);
         let charNum
         if(figChar){
             charNum = charToNum(figChar)
@@ -362,21 +358,18 @@ function shiftFigure(queue, figChar){
                 printFail("No such figure exists. (Wrong fig char: a, b, c ...). ")
             }
         } else {
-            outputFig = queue.shift()
-            console.log(outputFig);
-            if(charNum){
-                let source = outputFig[charNum - 1]
-            } else {
-                source = outputFig[0]
+            charNum = 1
+        }
+        outputFig = queue.shift()
+        console.log(outputFig);
+        let source = outputFig[charNum - 1]
+        if(source){
+            printResult(source)
+            if(queue.length !== 0){
+                createYesNo(queue, figChar)
             }
-            if(source){
-                printResult(source)
-                if(queue.length !== 0){
-                    createYesNo(queue, figChar)
-                }
-            }else {
-                printFail("No such figure exists. (Wrong fig char: a, b, c ...). ")
-            }
+        }else {
+            printFail("No such figure exists. (Wrong fig char: a, b, c ...). ")
         }
     }
 }

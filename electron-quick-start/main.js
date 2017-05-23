@@ -48,21 +48,20 @@ app.on('ready', () => {
     win = createWindow()
     win.webContents.on('did-finish-load', () => {
         win.webContents.send('main-render')
+        let globalPath
         if (process.platform !== 'darwin'){
-            let globalPath
             // = app.getAppPath().replace(/\\[a-zA-Z0-9_-]+\\resources\\app/gi, '\\')
             // win.webContents.send('cwd', globalPath)
             globalPath = path.join(app.getAppPath(), '../../../')
         } else {
-            let globalPath
             if(app.getAppPath().includes("electron-quick-start")) {
                 globalPath = path.join(app.getAppPath(), '../')                  // from developing stage
             } else {
                 // globalPath = app.getAppPath().replace(/\/\w+\.app\/Contents\/Resources\/app/gi, '\/')
                 globalPath = path.join(app.getAppPath(), '../../../../')
             }
-            win.webContents.send('cwd', globalPath)
         }
+        win.webContents.send('cwd', globalPath)
     })
 })
 
